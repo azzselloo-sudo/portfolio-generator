@@ -47,6 +47,7 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
 .upload-zone-wrap { margin-bottom: 36px; display: none; }
 .upload-zone-wrap.show { display: block; }
 .upload-zone {
+  display: block;
   border: 2px dashed var(--border2); border-radius: 12px; padding: 40px 24px;
   text-align: center; cursor: pointer; transition: all .2s; background: var(--bg2);
 }
@@ -214,8 +215,7 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
 
   <!-- UPLOAD ZONE -->
   <div class="upload-zone-wrap" id="upload-zone-wrap">
-    <div class="upload-zone" id="upload-zone"
-      onclick="document.getElementById('file-input').click()"
+    <label class="upload-zone" id="upload-zone" for="file-input"
       ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
       <div class="upload-zone-icon">☁️</div>
       <div class="upload-zone-title">파일을 여기에 끌어다 놓거나 클릭해서 업로드</div>
@@ -226,7 +226,7 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
         <span class="format-badge">MD</span>
       </div>
       <div class="file-selected-name" id="file-selected-name" style="display:none"></div>
-    </div>
+    </label>
     <input type="file" id="file-input" accept=".txt,.pdf,.md" style="display:none" onchange="onFileSelect(event)">
     <button class="btn-analyze" id="btn-analyze" onclick="analyzeFile()" disabled>
       <span id="btn-analyze-text">파일을 먼저 선택해주세요</span>
