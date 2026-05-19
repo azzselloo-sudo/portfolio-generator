@@ -3,8 +3,5 @@
   "rewrites": [
     { "source": "/portfolio", "destination": "/portfolio.html" },
     { "source": "/",          "destination": "/generator.html" }
-  ],
-  "env": {
-    "OPENAI_API_KEY": "@openai-api-key"
-  }
+  ]
 }
