@@ -47,9 +47,13 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
 .upload-zone-wrap { margin-bottom: 36px; display: none; }
 .upload-zone-wrap.show { display: block; }
 .upload-zone {
-  display: block;
+  display: block; position: relative;
   border: 2px dashed var(--border2); border-radius: 12px; padding: 40px 24px;
   text-align: center; cursor: pointer; transition: all .2s; background: var(--bg2);
+}
+#file-input {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  opacity: 0; cursor: pointer; z-index: 2;
 }
 .upload-zone:hover, .upload-zone.drag-over { border-color: var(--blue); background: var(--blue-lt); }
 .upload-zone-icon { font-size: 32px; margin-bottom: 10px; }
@@ -215,8 +219,9 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
 
   <!-- UPLOAD ZONE -->
   <div class="upload-zone-wrap" id="upload-zone-wrap">
-    <label class="upload-zone" id="upload-zone" for="file-input"
+    <div class="upload-zone" id="upload-zone"
       ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+      <input type="file" id="file-input" accept=".txt,.pdf,.md" onchange="onFileSelect(event)">
       <div class="upload-zone-icon">☁️</div>
       <div class="upload-zone-title">파일을 여기에 끌어다 놓거나 클릭해서 업로드</div>
       <div class="upload-zone-sub">이력서, 자소서, 포트폴리오, 경력기술서 등 어떤 형식이든 괜찮아요</div>
@@ -226,8 +231,7 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
         <span class="format-badge">MD</span>
       </div>
       <div class="file-selected-name" id="file-selected-name" style="display:none"></div>
-    </label>
-    <input type="file" id="file-input" accept=".txt,.pdf,.md" style="display:none" onchange="onFileSelect(event)">
+    </div>
     <button class="btn-analyze" id="btn-analyze" onclick="analyzeFile()" disabled>
       <span id="btn-analyze-text">파일을 먼저 선택해주세요</span>
       <span class="spinner" id="analyze-spinner" style="display:none; width:16px;height:16px;border:2px solid rgba(255,255,255,0.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite"></span>
