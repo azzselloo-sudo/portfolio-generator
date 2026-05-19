@@ -195,8 +195,7 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
     <div class="logo"><span class="logo-dot"></span>포트폴리오 생성기</div>
     <div style="display:flex;align-items:center;gap:8px">
       <a href="https://azzselloo-sudo.github.io/azzselloo-portfolio/public.html" target="_blank" style="font-size:12px;color:var(--text3);text-decoration:none;padding:5px 12px;border:1px solid var(--border);border-radius:6px;font-family:'Noto Sans KR',sans-serif;transition:all .15s" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)'">예시 포트폴리오</a>
-      <button class="btn-deploy" id="btn-deploy" onclick="deployPortfolio()">▲ 배포 / 저장</button>
-      <button class="btn-settings" title="연동 설정" onclick="openSettings()">⚙️</button>
+      <a href="mailto:looseroutine.official@gmail.com" style="font-size:12px;color:var(--text3);text-decoration:none;padding:5px 12px;border:1px solid var(--border);border-radius:6px;font-family:'Noto Sans KR',sans-serif;transition:all .15s" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)'">문의</a>
     </div>
   </div>
 </div>
@@ -1173,6 +1172,7 @@ function generate() {
   document.getElementById('result-link').textContent = link;
   const box = document.getElementById('result-box'); box.classList.add('show'); box._link = link;
   box.scrollIntoView({ behavior:'smooth', block:'nearest' });
+  saveToSupabase(data, link); // fire-and-forget
 }
 function copyLink() {
   navigator.clipboard.writeText(document.getElementById('result-box')._link).then(()=>{

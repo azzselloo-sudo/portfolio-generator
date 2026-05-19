@@ -230,6 +230,16 @@ body.edit-mode .edit-img-zone { display:flex; }
 .edit-img-file-lbl { font-size:11px; font-weight:600; color:var(--sub); border:1px solid var(--line); padding:5px 10px; border-radius:5px; cursor:pointer; white-space:nowrap; }
 .edit-img-apply { background:#6366f1; color:#fff; border:none; font-size:11px; font-weight:700; padding:6px 12px; border-radius:5px; cursor:pointer; white-space:nowrap; }
 
+/* DEPLOY BUTTON */
+.btn-portfolio-deploy {
+  position: fixed; top: 16px; right: 16px; z-index: 200;
+  background: #2563eb; color: #fff; border: none;
+  font-size: 12px; font-weight: 700; padding: 8px 18px;
+  border-radius: 6px; cursor: pointer; font-family: 'Noto Sans KR', sans-serif;
+  transition: background .15s; box-shadow: 0 2px 8px rgba(37,99,235,.35);
+}
+.btn-portfolio-deploy:hover { background: #1d4ed8; }
+
 /* MOBILE */
 @media (max-width: 900px) {
   .sidebar { display:none; }
@@ -248,6 +258,8 @@ body.edit-mode .edit-img-zone { display:flex; }
 </style>
 </head>
 <body>
+
+<button class="btn-portfolio-deploy" id="btn-portfolio-deploy" onclick="deployPortfolio()">▲ 배포</button>
 
 <nav class="sidebar" id="sidebar">
   <div class="sidebar-logo">
@@ -680,6 +692,13 @@ function init() {
 }
 window.addEventListener('hashchange', init);
 init();
+
+async function deployPortfolio() {
+  await navigator.clipboard.writeText(window.location.href);
+  const btn = document.getElementById('btn-portfolio-deploy');
+  btn.textContent = '✓ 복사됨';
+  setTimeout(() => { btn.textContent = '▲ 배포'; }, 2000);
+}
 </script>
 </body>
 </html>
