@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>포트폴리오 생성기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #ffffff; --bg2: #f8fafc; --bg3: #f1f5f9;
+  --border: #e2e8f0; --border2: #cbd5e1;
+  --text: #0f172a; --text2: #334155; --text3: #64748b; --text4: #94a3b8;
+  --blue: #2563eb; --blue-lt: #eff6ff; --blue-dk: #1d4ed8;
+  --green: #16a34a; --green-lt: #f0fdf4;
+  --red: #dc2626; --radius: 8px;
+}
+body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.7; min-height: 100vh; }
+
+/* HEADER */
+.header { background: var(--bg); border-bottom: 1px solid var(--border); padding: 0 24px; position: sticky; top: 0; z-index: 50; }
+.header-inner { max-width: 720px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; height: 56px; }
+.logo { font-size: 14px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 7px; }
+.logo-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--blue); }
+.btn-api-settings { font-size: 12px; color: var(--text3); border: 1px solid var(--border); background: none; padding: 5px 12px; border-radius: 6px; cursor: pointer; font-family: inherit; transition: all .15s; display: flex; align-items: center; gap: 5px; }
+.btn-api-settings:hover { border-color: var(--blue); color: var(--blue); }
+.api-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text4); flex-shrink: 0; }
+.api-dot.connected { background: var(--green); }
+
+/* LAYOUT */
+.wrap { max-width: 720px; margin: 0 auto; padding: 32px 24px 160px; }
+
+/* ── MODE SELECTOR ── */
+.mode-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 36px; }
+.mode-card { border: 2px solid var(--border); border-radius: 12px; padding: 18px 20px; cursor: pointer; transition: all .2s; background: var(--bg); }
+.mode-card:hover { border-color: var(--blue); background: var(--blue-lt); }
+.mode-card.active { border-color: var(--blue); background: var(--blue-lt); }
+.mode-card-icon { font-size: 22px; margin-bottom: 6px; }
+.mode-card-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+.mode-card.active .mode-card-title { color: var(--blue); }
+.mode-card-desc { font-size: 11px; color: var(--text3); line-height: 1.5; }
+
+/* ── UPLOAD ZONE ── */
+.upload-zone-wrap { margin-bottom: 36px; display: none; }
+.upload-zone-wrap.show { display: block; }
+.upload-zone {
+  border: 2px dashed var(--border2); border-radius: 12px; padding: 40px 24px;
+  text-align: center; cursor: pointer; transition: all .2s; background: var(--bg2);
+}
+.upload-zone:hover, .upload-zone.drag-over { border-color: var(--blue); background: var(--blue-lt); }
+.upload-zone-icon { font-size: 32px; margin-bottom: 10px; }
+.upload-zone-title { font-size: 14px; font-weight: 700; color: var(--text2); margin-bottom: 4px; }
+.upload-zone-sub { font-size: 12px; color: var(--text3); }
+.upload-zone-formats { display: flex; gap: 6px; justify-content: center; margin-top: 12px; }
+.format-badge { font-size: 10px; font-weight: 700; background: var(--bg3); color: var(--text3); padding: 2px 8px; border-radius: 4px; border: 1px solid var(--border); }
+.file-selected { background: var(--blue-lt); border-color: var(--blue); }
+.file-selected-name { font-size: 13px; font-weight: 600; color: var(--blue); margin-top: 8px; }
+.btn-analyze { width: 100%; margin-top: 14px; background: var(--blue); color: #fff; border: none; font-family: 'Noto Sans KR', sans-serif; font-size: 14px; font-weight: 700; padding: 13px; border-radius: var(--radius); cursor: pointer; transition: background .15s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.btn-analyze:hover { background: var(--blue-dk); }
+.btn-analyze:disabled { background: var(--border2); cursor: not-allowed; }
+.analyze-progress { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 16px; margin-top: 12px; display: none; }
+.analyze-progress.show { display: block; }
+.progress-step { font-size: 12px; color: var(--text3); padding: 4px 0; display: flex; align-items: center; gap: 8px; }
+.progress-step.done { color: var(--green); }
+.progress-step.active { color: var(--blue); font-weight: 600; }
+
+/* FILL NOTICE */
+.fill-notice { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: var(--radius); padding: 12px 16px; font-size: 12px; color: #166534; margin-bottom: 28px; display: none; align-items: flex-start; gap: 8px; }
+.fill-notice.show { display: flex; }
+
+/* STEP */
+.step { margin-bottom: 52px; }
+.step-header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 24px; }
+.step-num { width: 26px; height: 26px; border-radius: 50%; background: var(--blue); color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
+.step-title { font-size: 16px; font-weight: 700; }
+.step-sub { font-size: 12px; color: var(--text3); margin-top: 2px; }
+
+/* FIELD */
+.field { margin-bottom: 16px; }
+.field label { display: block; font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 6px; }
+.field input, .field textarea, .field select {
+  width: 100%; background: var(--bg); border: 1.5px solid var(--border);
+  color: var(--text); font-family: 'Noto Sans KR', sans-serif; font-size: 13px;
+  padding: 10px 13px; border-radius: var(--radius); transition: border-color .15s, box-shadow .15s; outline: none;
+}
+.field input:focus, .field textarea:focus, .field select:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,0.08); }
+.field textarea { resize: vertical; min-height: 72px; }
+.field-hint { font-size: 11px; color: var(--text4); margin-top: 5px; line-height: 1.6; }
+.field-row { display: grid; gap: 12px; }
+.field-row.col2 { grid-template-columns: 1fr 1fr; }
+
+/* AI INPUT */
+.ai-input-wrap { background: var(--bg2); border: 1.5px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 12px; }
+.ai-input-header { padding: 11px 14px 0; }
+.ai-input-label { font-size: 11px; font-weight: 700; color: var(--blue); }
+.ai-input-wrap textarea { width: 100%; border: none; background: transparent; font-family: 'Noto Sans KR', sans-serif; font-size: 13px; color: var(--text); padding: 8px 14px 12px; outline: none; resize: none; min-height: 80px; }
+.ai-input-footer { padding: 0 14px 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.ai-placeholder-hint { font-size: 11px; color: var(--text4); }
+.btn-ai { display: flex; align-items: center; gap: 5px; background: var(--blue); color: #fff; border: none; font-family: 'Noto Sans KR', sans-serif; font-size: 12px; font-weight: 600; padding: 7px 13px; border-radius: 6px; cursor: pointer; transition: background .15s; white-space: nowrap; flex-shrink: 0; }
+.btn-ai:hover { background: var(--blue-dk); }
+.btn-ai:disabled { background: var(--border2); cursor: not-allowed; }
+.btn-ai .spinner { display: none; width: 12px; height: 12px; border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; }
+.btn-ai.loading .spinner { display: block; }
+.btn-ai.loading .btn-ai-text { display: none; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* FIELD AI BUTTON (small inline) */
+.field-label-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+.field-label-row label { margin:0; }
+.btn-ai-sm { display:inline-flex; align-items:center; gap:4px; background:var(--blue); color:#fff; border:none; font-family:'Noto Sans KR',sans-serif; font-size:11px; font-weight:600; padding:4px 10px; border-radius:5px; cursor:pointer; transition:background .15s; white-space:nowrap; flex-shrink:0; }
+.btn-ai-sm:hover { background:var(--blue-dk); }
+.btn-ai-sm:disabled { background:var(--border2); cursor:not-allowed; }
+.btn-ai-sm .spinner { display:none; width:10px; height:10px; border:1.5px solid rgba(255,255,255,0.4); border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite; }
+.btn-ai-sm.loading .spinner { display:block; }
+.btn-ai-sm.loading .btn-ai-text { display:none; }
+
+.or-divider { display: flex; align-items: center; gap: 10px; margin: 10px 0 14px; }
+.or-divider::before, .or-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.or-divider span { font-size: 11px; color: var(--text4); white-space: nowrap; }
+
+.ai-feedback { background: var(--blue-lt); border: 1.5px solid #bfdbfe; border-radius: 6px; padding: 9px 13px; font-size: 12px; color: #1e40af; margin-bottom: 14px; display: none; }
+.ai-feedback.show { display: block; }
+
+/* PROJECT CARD */
+.project-card { background: var(--bg); border: 1.5px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 14px; }
+.project-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.project-num { font-size: 11px; font-weight: 700; color: var(--text4); letter-spacing: .1em; }
+
+/* STAT ROW */
+.stat-row { display: grid; grid-template-columns: 110px 1fr auto; gap: 8px; align-items: start; margin-bottom: 8px; }
+
+.btn-remove { background: none; border: 1.5px solid #fecaca; color: var(--red); font-size: 16px; width: 34px; height: 36px; border-radius: 6px; cursor: pointer; transition: all .15s; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.btn-remove:hover { background: #fef2f2; }
+.btn-add { display: flex; align-items: center; gap: 6px; background: none; border: 1.5px dashed var(--border2); color: var(--text3); font-size: 12px; font-family: 'Noto Sans KR', sans-serif; padding: 9px 16px; border-radius: 6px; cursor: pointer; transition: all .15s; width: 100%; justify-content: center; margin-top: 4px; }
+.btn-add:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-lt); }
+
+.flow-items { display: flex; flex-direction: column; gap: 6px; }
+.flow-item { display: grid; grid-template-columns: 1fr 2fr auto; gap: 8px; align-items: start; }
+
+/* GENERATE BAR */
+.generate-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg); border-top: 1px solid var(--border); padding: 14px 24px; z-index: 100; box-shadow: 0 -4px 24px rgba(0,0,0,0.06); }
+.generate-inner { max-width: 720px; margin: 0 auto; }
+.btn-generate { width: 100%; background: var(--blue); color: #fff; border: none; font-family: 'Noto Sans KR', sans-serif; font-size: 14px; font-weight: 700; padding: 14px; border-radius: var(--radius); cursor: pointer; transition: background .15s; }
+.btn-generate:hover { background: var(--blue-dk); }
+.result-box { background: var(--green-lt); border: 1px solid #bbf7d0; border-radius: var(--radius); padding: 14px 16px; margin-top: 12px; display: none; }
+.result-box.show { display: block; }
+.result-label { font-size: 12px; font-weight: 600; color: var(--green); margin-bottom: 8px; }
+.result-link-row { display: flex; gap: 8px; }
+.result-link { flex: 1; background: #fff; border: 1px solid var(--border); color: var(--text3); font-size: 11px; padding: 8px 11px; border-radius: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: monospace; }
+.btn-copy { background: var(--green); color: #fff; border: none; font-family: 'Noto Sans KR', sans-serif; font-size: 12px; font-weight: 600; padding: 8px 14px; border-radius: 5px; cursor: pointer; white-space: nowrap; }
+.btn-copy:hover { opacity: .85; }
+.btn-preview { background: #fff; color: var(--text2); border: 1px solid var(--border2); font-family: 'Noto Sans KR', sans-serif; font-size: 12px; padding: 8px 14px; border-radius: 5px; cursor: pointer; white-space: nowrap; }
+.btn-preview:hover { border-color: var(--blue); color: var(--blue); }
+
+/* HEADER BUTTONS */
+.btn-deploy { font-size: 12px; color: #fff; background: var(--green); border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-family: inherit; font-weight: 700; transition: background .15s; }
+.btn-deploy:hover { background: #15803d; }
+.btn-deploy:disabled { opacity:.5; cursor:not-allowed; }
+.btn-settings { font-size: 18px; color: var(--text3); border: none; background: none; padding: 4px 6px; border-radius: 6px; cursor: pointer; line-height:1; transition: color .15s; }
+.btn-settings:hover { color: var(--text); }
+
+/* MODALS */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; display: none; align-items: center; justify-content: center; }
+.modal-overlay.show { display: flex; }
+.modal { background: var(--bg); border-radius: 12px; padding: 28px; width: 100%; max-width: 460px; margin: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); max-height: 90vh; overflow-y: auto; }
+.modal h3 { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+.modal-desc { font-size: 12px; color: var(--text3); margin-bottom: 20px; line-height: 1.7; }
+.modal-footer { display: flex; gap: 8px; margin-top: 20px; }
+.btn-modal-save { flex: 1; background: var(--blue); color: #fff; border: none; font-family: 'Noto Sans KR', sans-serif; font-size: 13px; font-weight: 600; padding: 10px; border-radius: 6px; cursor: pointer; }
+.btn-modal-cancel { background: none; border: 1.5px solid var(--border); color: var(--text3); font-family: 'Noto Sans KR', sans-serif; font-size: 13px; padding: 10px 16px; border-radius: 6px; cursor: pointer; }
+.modal-input { width:100%; border:1px solid var(--border); border-radius:6px; padding:9px 12px; font-size:13px; font-family:inherit; outline:none; transition:border-color .15s; }
+.modal-input:focus { border-color: var(--blue); }
+.modal-section-label { font-size:11px; font-weight:700; color:var(--text3); letter-spacing:.06em; text-transform:uppercase; margin-bottom:10px; }
+.deploy-url-box { background:var(--bg2); border:1px solid var(--border); border-radius:8px; padding:14px; margin-bottom:12px; }
+.deploy-url-text { font-size:11.5px; color:var(--text2); word-break:break-all; line-height:1.7; }
+.deploy-status { font-size:12px; padding:10px 12px; background:var(--bg2); border-radius:6px; line-height:1.6; }
+.sb-sql { font-size:10px; background:var(--bg3); padding:12px; border-radius:6px; overflow-x:auto; margin-top:8px; line-height:1.7; color:var(--text2); white-space:pre; font-family:monospace; }
+
+/* NOTICE */
+.notice { background: #fefce8; border: 1px solid #fde68a; border-radius: var(--radius); padding: 11px 14px; font-size: 12px; color: #92400e; margin-bottom: 32px; display: flex; gap: 8px; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="logo"><span class="logo-dot"></span>포트폴리오 생성기</div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <a href="https://azzselloo-sudo.github.io/azzselloo-portfolio/public.html" target="_blank" style="font-size:12px;color:var(--text3);text-decoration:none;padding:5px 12px;border:1px solid var(--border);border-radius:6px;font-family:'Noto Sans KR',sans-serif;transition:all .15s" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)'">예시 포트폴리오</a>
+      <button class="btn-deploy" id="btn-deploy" onclick="deployPortfolio()">▲ 배포 / 저장</button>
+      <button class="btn-settings" title="연동 설정" onclick="openSettings()">⚙️</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- MODE SELECTOR -->
+  <div class="mode-selector">
+    <div class="mode-card" id="mode-upload" onclick="setMode('upload')">
+      <div class="mode-card-icon">📄</div>
+      <div class="mode-card-title">자료 업로드로 시작</div>
+      <div class="mode-card-desc">이력서·자소서·포트폴리오 파일을 올리면 AI가 폼을 자동으로 채워드려요</div>
+    </div>
+    <div class="mode-card active" id="mode-direct" onclick="setMode('direct')">
+      <div class="mode-card-icon">✏️</div>
+      <div class="mode-card-title">직접 입력</div>
+      <div class="mode-card-desc">아래 폼을 직접 채워주세요. AI 버튼으로 내용을 다듬을 수 있어요</div>
+    </div>
+  </div>
+
+  <!-- UPLOAD ZONE -->
+  <div class="upload-zone-wrap" id="upload-zone-wrap">
+    <div class="upload-zone" id="upload-zone"
+      onclick="document.getElementById('file-input').click()"
+      ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+      <div class="upload-zone-icon">☁️</div>
+      <div class="upload-zone-title">파일을 여기에 끌어다 놓거나 클릭해서 업로드</div>
+      <div class="upload-zone-sub">이력서, 자소서, 포트폴리오, 경력기술서 등 어떤 형식이든 괜찮아요</div>
+      <div class="upload-zone-formats">
+        <span class="format-badge">TXT</span>
+        <span class="format-badge">PDF</span>
+        <span class="format-badge">MD</span>
+      </div>
+      <div class="file-selected-name" id="file-selected-name" style="display:none"></div>
+    </div>
+    <input type="file" id="file-input" accept=".txt,.pdf,.md" style="display:none" onchange="onFileSelect(event)">
+    <button class="btn-analyze" id="btn-analyze" onclick="analyzeFile()" disabled>
+      <span id="btn-analyze-text">파일을 먼저 선택해주세요</span>
+      <span class="spinner" id="analyze-spinner" style="display:none; width:16px;height:16px;border:2px solid rgba(255,255,255,0.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite"></span>
+    </button>
+    <div class="analyze-progress" id="analyze-progress">
+      <div class="progress-step" id="prog-read">📄 파일 읽는 중...</div>
+      <div class="progress-step" id="prog-ai">✦ AI가 내용 분석 중...</div>
+      <div class="progress-step" id="prog-fill">📝 폼에 채우는 중...</div>
+    </div>
+  </div>
+
+  <!-- FILL NOTICE -->
+  <div class="fill-notice" id="fill-notice">
+    <span>✓</span>
+    <span>AI가 파일을 분석해서 1차로 채웠어요. 내용을 확인하고 각 항목의 <strong>AI로 정리하기</strong> 버튼으로 추가 다듬기도 할 수 있어요.</span>
+  </div>
+
+  <!-- API 미설정 안내 -->
+
+  <!-- STEP 1 -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-num">1</div>
+      <div>
+        <div class="step-title">기본 정보</div>
+        <div class="step-sub">이름과 어떤 일을 하는 사람인지 알려주세요</div>
+      </div>
+    </div>
+    <div class="ai-input-wrap">
+      <div class="ai-input-header"><span class="ai-input-label">✦ 본인 소개를 자유롭게 써주세요 — AI가 아래 항목들을 채워드려요</span></div>
+      <textarea id="intro-rough" placeholder="예) 8년차 데이터·마케팅 올라운더. LG CNS에서 글로벌 60개국 마케팅 분석 PM 하다가 카카오스타일 BI팀 거쳐서 지금은 웰니스 브랜드 루즈루틴 직접 운영 중. AI 자동화로 혼자 다 돌리고 있어요."></textarea>
+      <div class="ai-input-footer">
+        <span class="ai-placeholder-hint">편하게 써주세요</span>
+        <button class="btn-ai" id="btn-intro-ai" onclick="aiPolishIntro()">
+          <span class="btn-ai-text">✦ AI로 채우기</span><span class="spinner"></span>
+        </button>
+      </div>
+    </div>
+    <div class="or-divider"><span>확인·수정</span></div>
+    <div class="field-row col2" style="margin-bottom:16px">
+      <div class="field" style="margin:0"><label>이름</label><input type="text" id="name" placeholder="박현지"></div>
+      <div class="field" style="margin:0"><label>직함 / 역할 <span style="color:var(--text4);font-weight:400">(짧게)</span></label><input type="text" id="role" placeholder="예) Full-Funnel AX 전문가 · 브랜드 마케터"></div>
+    </div>
+    <div class="field"><label>슬로건 <span style="color:var(--text4);font-weight:400">(포트폴리오 대제목 — 전문성·포지셔닝 한 줄)</span></label><input type="text" id="tagline" placeholder="예) 글로벌 60개국 데이터 표준화부터 1인 기업 AI 무인 자동화까지"></div>
+    <div class="field"><label>소개글</label><textarea id="intro" placeholder="예) 데이터 분석부터 브랜드 런칭까지 경험한 8년차 마케터. 생성형 AI로 1인 기업 무인화를 직접 구현 중."></textarea></div>
+    <div class="field" style="margin:0"><label>경력 경로 <span style="color:var(--text4);font-weight:400">(학교·회사 | 로 구분 — 사이드바·헤더 breadcrumb에 표시)</span></label><input type="text" id="career" placeholder="예) 건국대 산업공학 | LG CNS | 카카오스타일 | 現 루즈루틴"></div>
+  </div>
+
+  <!-- STEP 2: 핵심 강점 -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-num">2</div>
+      <div>
+        <div class="step-title">핵심 강점</div>
+        <div class="step-sub">나만의 차별점, 잘하는 것, 전문 분야</div>
+      </div>
+    </div>
+    <div class="ai-input-wrap">
+      <div class="ai-input-header"><span class="ai-input-label">✦ 강점·전문성을 자유롭게 써주세요 — AI가 아래 목록으로 정리해드려요</span></div>
+      <textarea id="strengths-rough" placeholder="예) 데이터 분석이 진짜 강점, GA4·SQL·FAISS 다 씀. LG에서 글로벌 PM 했고 카카오스타일에서 전사 의사결정 지원. 지금은 AI 자동화로 이커머스 혼자 운영 중. 퍼포먼스 마케팅도 8년 됐음."></textarea>
+      <div class="ai-input-footer">
+        <span class="ai-placeholder-hint">편하게 써주세요</span>
+        <button class="btn-ai" id="btn-strengths-ai" onclick="aiPolishStrengths()">
+          <span class="btn-ai-text">✦ AI로 채우기</span><span class="spinner"></span>
+        </button>
+      </div>
+    </div>
+    <div class="or-divider"><span>확인·수정</span></div>
+    <div class="field">
+      <label>핵심 강점 목록 <span style="color:var(--text4);font-weight:400">(한 줄에 하나씩)</span></label>
+      <textarea id="strengths" placeholder="데이터 기반 의사결정: GA4·SQL·FAISS로 전사 KPI 설계, LG·카카오스타일 실적 기여&#10;AI 자동화 구현: n8n·LLM으로 콘텐츠·마케팅 파이프라인 직접 설계·운영&#10;글로벌 마케팅 PM: 60개국 데이터 표준화, 프랑스 전환율 8.9%→41.3% 달성&#10;브랜드 그로스: 루즈루틴 재구매율 80%, 오가닉 전환율 MoM 10배" style="min-height:120px"></textarea>
+      <div class="field-hint">강점 제목: 설명 형식으로 작성하면 카드로 표시됩니다.</div>
+    </div>
+  </div>
+
+  <!-- STEP 3: 대표 성과 숫자 -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-num">3</div>
+      <div>
+        <div class="step-title">대표 성과 숫자</div>
+        <div class="step-sub">숫자로 말할 수 있는 성과 3~4개</div>
+      </div>
+    </div>
+    <div class="ai-input-wrap">
+      <div class="ai-input-header"><span class="ai-input-label">✦ 대표 성과를 자유롭게 써주세요 — AI가 수치 카드로 정리해드려요</span></div>
+      <textarea id="stats-rough" placeholder="예) 재구매율 80% 달성, 오가닉 전환율 MoM 최대 10배, 프랑스 구매전환율 8.9%→41.3%, 카카오스타일 월 7~9억 고정비 절감, 글로벌 60개국 데이터 표준화"></textarea>
+      <div class="ai-input-footer">
+        <span class="ai-placeholder-hint">숫자가 있으면 꼭 넣어주세요</span>
+        <button class="btn-ai" id="btn-stats-ai" onclick="aiPolishStats()">
+          <span class="btn-ai-text">✦ AI로 채우기</span><span class="spinner"></span>
+        </button>
+      </div>
+    </div>
+    <div class="or-divider"><span>확인·수정</span></div>
+    <div id="stats-container"></div>
+    <button class="btn-add" onclick="addStat()">+ 수치 추가 (최대 4개)</button>
+    <div class="field-hint" style="margin-top:8px">예: <strong>80%</strong> / 재구매율 &nbsp;·&nbsp; <strong>10배</strong> / 오가닉 전환율 MoM &nbsp;·&nbsp; <strong>60개국</strong> / 글로벌 데이터 표준화</div>
+  </div>
+
+  <!-- STEP 4: 경력 타임라인 -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-num">4</div>
+      <div>
+        <div class="step-title">경력 타임라인</div>
+        <div class="step-sub">최신 순으로 정리해주세요</div>
+      </div>
+    </div>
+    <div class="ai-input-wrap">
+      <div class="ai-input-header"><span class="ai-input-label">✦ 경력을 자유롭게 써주세요 — AI가 타임라인 카드로 정리해드려요</span></div>
+      <textarea id="exp-rough" placeholder="예) LG CNS 2018-2022 디지털마케팅·데이터 분석 선임 (글로벌 60개국 PM), 카카오스타일 2022-2024 BI팀 데이터 분석 (셀러 리포트·고정비 절감), 루즈루틴 2024-현재 파운더 (AI 자동화 운영)"></textarea>
+      <div class="ai-input-footer">
+        <span class="ai-placeholder-hint">회사명, 기간, 역할만 있으면 돼요</span>
+        <button class="btn-ai" id="btn-exp-ai" onclick="aiPolishExperiences()">
+          <span class="btn-ai-text">✦ AI로 채우기</span><span class="spinner"></span>
+        </button>
+      </div>
+    </div>
+    <div class="or-divider"><span>확인·수정</span></div>
+    <div id="experiences-container"></div>
+    <button class="btn-add" onclick="addExperience()">+ 경력 추가</button>
+  </div>
+
+  <!-- STEP 5: 스킬 / 툴 -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-num">5</div>
+      <div>
+        <div class="step-title">스킬 / 툴</div>
+        <div class="step-sub">쉼표로 구분해서 입력해주세요</div>
+      </div>
+    </div>
+    <div class="ai-input-wrap">
+      <div class="ai-input-header"><span class="ai-input-label">✦ 쓸 줄 아는 스킬·툴을 자유롭게 써주세요 — AI가 정리해드려요</span></div>
+      <textarea id="skills-rough" placeholder="예) GA4, SQL, FAISS, Python 기초, Meta Ads, 퍼포먼스 마케팅, n8n 자동화, LLM 프롬프트 엔지니어링, 데이터 분석, Figma, 브랜드 기획, 이커머스 운영"></textarea>
+      <div class="ai-input-footer">
+        <span class="ai-placeholder-hint">편하게 나열해주세요</span>
+        <button class="btn-ai" id="btn-skills-ai" onclick="aiPolishSkills()">
+          <span class="btn-ai-text">✦ AI로 채우기</span><span class="spinner"></span>
+        </button>
+      </div>
+    </div>
+    <div class="or-divider"><span>확인·수정</span></div>
+    <div class="field">
+      <label>스킬 목록</label>
+      <textarea id="skills" placeholder="예) 데이터 분석, GA4, SQL, FAISS, 퍼포먼스 마케팅, Meta Ads, n8n, LLM 프롬프트 엔지니어링, 브랜드 기획, Figma, 이커머스 운영"></textarea>
+      <div class="field-hint">쉼표(,)로 구분하면 포트폴리오에 태그로 표시됩니다</div>
+    </div>
+  </div>
+
+  <!-- STEP 6: 학력 / 자격증 -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-num">6</div>
+      <div>
+        <div class="step-title">학력 / 자격증</div>
+        <div class="step-sub">학교, 전공, 자격증을 추가해주세요</div>
+      </div>
+    </div>
+    <div class="ai-input-wrap">
+      <div class="ai-input-header"><span class="ai-input-label">✦ 학력·자격증을 자유롭게 써주세요 — AI가 정리해드려요</span></div>
+      <textarea id="edu-rough" placeholder="예) 건국대학교 산업공학과 2018년 졸업, 구글 애널리틱스 자격증, LG CNS 2021 상·하반기 S등급"></textarea>
+      <div class="ai-input-footer">
+        <span class="ai-placeholder-hint">학교명, 전공, 졸업연도면 충분해요</span>
+        <button class="btn-ai" id="btn-edu-ai" onclick="aiPolishEducation()">
+          <span class="btn-ai-text">✦ AI로 채우기</span><span class="spinner"></span>
+        </button>
+      </div>
+    </div>
+    <div class="or-divider"><span>확인·수정</span></div>
+    <div id="education-container"></div>
+    <button class="btn-add" onclick="addEducation()">+ 학력·자격증 추가</button>
+  </div>
+
+  <!-- STEP 7: 프로젝트 -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-num">7</div>
+      <div>
+        <div class="step-title">프로젝트 / 경험</div>
+        <div class="step-sub">대표 작업이나 경험을 추가해주세요</div>
+      </div>
+    </div>
+    <div class="ai-input-wrap">
+      <div class="ai-input-header"><span class="ai-input-label">✦ 모든 프로젝트·경험을 한 번에 써주세요 — AI가 최대 8개로 분류해드려요</span></div>
+      <textarea id="projects-rough" placeholder="예) n8n으로 블로그 자동화 파이프라인 구축, 월 300개 발행 MoM 10배 달성 / LG CNS 글로벌 60개국 마케팅 데이터 표준화 PM, 프랑스 전환율 8.9%→41.3% / 카카오스타일 셀러 리포트 기획·개발, 월 7~9억 고정비 절감" style="min-height:120px"></textarea>
+      <div class="ai-input-footer">
+        <span class="ai-placeholder-hint">슬래시(/) 또는 줄바꿈으로 프로젝트 구분해주세요</span>
+        <button class="btn-ai" id="btn-projects-ai" onclick="aiPolishProjects()">
+          <span class="btn-ai-text">✦ AI로 채우기</span><span class="spinner"></span>
+        </button>
+      </div>
+    </div>
+    <div class="or-divider"><span>확인·수정</span></div>
+    <div id="projects-container"></div>
+    <button class="btn-add" onclick="addProject()">+ 프로젝트 추가 (최대 8개)</button>
+  </div>
+
+</div>
+
+<!-- SETTINGS MODAL (로컬 개발용 — 배포 환경에서는 Vercel 환경변수로 대체) -->
+<div class="modal-overlay" id="settings-modal" onclick="if(event.target===this)closeSettings()">
+  <div class="modal" style="max-width:400px">
+    <h3>⚙️ 로컬 개발 설정</h3>
+    <p class="modal-desc">Vercel 배포 환경에서는 자동으로 무시됩니다. 로컬에서 <code>node local-server.js</code>로 실행할 때만 필요해요.</p>
+    <div>
+      <div class="modal-section-label">OpenAI API Key</div>
+      <input type="password" id="setting-api-key" class="modal-input" placeholder="sk-...">
+      <p style="font-size:11px;color:var(--text4);margin-top:5px">로컬 서버 프록시를 사용하거나 환경변수 <code>OPENAI_API_KEY</code>가 있으면 불필요합니다.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-modal-cancel" onclick="closeSettings()">취소</button>
+      <button class="btn-modal-save" onclick="saveSettings()">저장</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- GENERATE BAR -->
+<div class="generate-bar">
+  <div class="generate-inner">
+    <button class="btn-generate" onclick="generate()">포트폴리오 링크 생성</button>
+    <div class="result-box" id="result-box">
+      <div class="result-label">✓ 링크가 생성됐어요. 복사해서 바로 공유하세요.</div>
+      <div class="result-link-row">
+        <div class="result-link" id="result-link"></div>
+        <button class="btn-preview" onclick="previewPortfolio()">미리보기</button>
+        <button class="btn-copy" onclick="copyLink()">링크 복사</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+// ── PDF.js setup ──
+if (typeof pdfjsLib !== 'undefined') {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+}
+
+// ── SUPABASE CONFIG (배포 시 여기에 입력) ──
+const SUPABASE_URL = 'https://ygiidqgulmgrbdnhpoqe.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlnaWlkcWd1bG1ncmJkbmhwb3FlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM5NzExNzgsImV4cCI6MjA4OTU0NzE3OH0.l_6jfms56VOa1bssk3Dgrx0oTGJxYQ2a5c7ABnlyADU';
+
+// ── STATE ──
+const state = { stats: [], projects: [], experiences: [], education: [] };
+let currentMode = 'direct';
+let selectedFile = null;
+let _aiLog = [];       // AI 대화 전체 로그
+let _fileContent = ''; // 업로드 파일 원문
+let _fileInfo = null;  // { name, size, type }
+
+const CATEGORIES = [
+  { val: 'planning', label: '📋 기획' }, { val: 'dev', label: '💻 개발' },
+  { val: 'marketing', label: '📣 마케팅' }, { val: 'design', label: '🎨 디자인' },
+  { val: 'sales', label: '💼 영업·BD' }, { val: 'operations', label: '⚙️ 운영' },
+  { val: 'education', label: '🎓 교육·강의' }, { val: 'research', label: '🔬 연구·분석' },
+  { val: 'content', label: '✍️ 콘텐츠' }, { val: 'etc', label: '📌 기타' },
+];
+
+// ── INIT ──
+addStat('', '', '예) 80%',    '예) 재구매율');
+addStat('', '', '예) 10배',   '예) 오가닉 전환율 MoM');
+addStat('', '', '예) 60개국', '예) 글로벌 데이터 표준화');
+addExperience();
+addEducation();
+addProject();
+
+// Portfolio.html에서 "생성기에서 내용 수정하기" 링크로 돌아온 경우 자동 채우기
+if (location.hash) {
+  try {
+    const _hdata = JSON.parse(decodeURIComponent(escape(atob(location.hash.slice(1)))));
+    if (_hdata && _hdata.name) fillAllFields(_hdata);
+  } catch(e) { /* ignore malformed hash */ }
+}
+
+// ── MODE ──
+function setMode(mode) {
+  currentMode = mode;
+  document.getElementById('mode-upload').className = 'mode-card' + (mode==='upload'?' active':'');
+  document.getElementById('mode-direct').className = 'mode-card' + (mode==='direct'?' active':'');
+  const uploadWrap = document.getElementById('upload-zone-wrap');
+  uploadWrap.className = 'upload-zone-wrap' + (mode==='upload'?' show':'');
+}
+
+// ── FILE HANDLING ──
+function onDragOver(e) { e.preventDefault(); document.getElementById('upload-zone').classList.add('drag-over'); }
+function onDragLeave(e) { document.getElementById('upload-zone').classList.remove('drag-over'); }
+function onDrop(e) {
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) setFile(file);
+}
+function onFileSelect(e) {
+  const file = e.target.files[0];
+  if (file) setFile(file);
+}
+function setFile(file) {
+  selectedFile = file;
+  const nameEl = document.getElementById('file-selected-name');
+  nameEl.textContent = '📄 ' + file.name;
+  nameEl.style.display = 'block';
+  document.getElementById('upload-zone').classList.add('file-selected');
+  const btn = document.getElementById('btn-analyze');
+  btn.disabled = false;
+  document.getElementById('btn-analyze-text').textContent = 'AI로 분석해서 자동 채우기';
+}
+
+async function readFileText(file) {
+  if (file.name.endsWith('.pdf')) {
+    if (typeof pdfjsLib === 'undefined') throw new Error('PDF 파서를 불러오지 못했어요.');
+    const buf = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+    let text = '';
+    for (let i = 1; i <= Math.min(pdf.numPages, 10); i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      text += content.items.map(item => item.str).join(' ') + '\n';
+    }
+    return text;
+  }
+  return new Promise((res, rej) => {
+    const reader = new FileReader();
+    reader.onload = e => res(e.target.result);
+    reader.onerror = () => rej(new Error('파일을 읽지 못했어요.'));
+    reader.readAsText(file, 'utf-8');
+  });
+}
+
+function setProgress(step) {
+  ['read','ai','fill'].forEach((s, i) => {
+    const el = document.getElementById('prog-' + s);
+    const stepIdx = ['read','ai','fill'].indexOf(step);
+    if (i < stepIdx) el.className = 'progress-step done';
+    else if (i === stepIdx) el.className = 'progress-step active';
+    else el.className = 'progress-step';
+  });
+}
+
+async function analyzeFile() {
+  if (!selectedFile) return;
+
+  const btn = document.getElementById('btn-analyze');
+  const spinner = document.getElementById('analyze-spinner');
+  btn.disabled = true;
+  spinner.style.display = 'inline-block';
+  document.getElementById('btn-analyze-text').textContent = '분석 중...';
+  const progress = document.getElementById('analyze-progress');
+  progress.classList.add('show');
+
+  try {
+    setProgress('read');
+    const text = await readFileText(selectedFile);
+    _fileContent = text;
+    _fileInfo = { name: selectedFile.name, size: selectedFile.size, type: selectedFile.type };
+    const truncated = text.slice(0, 4000);
+
+    setProgress('ai');
+    const catVals = CATEGORIES.map(c => c.val).join(', ');
+    const prompt = `다음은 포트폴리오를 만들려는 사람의 자료입니다 (이력서, 자소서, 경력기술서 등).
+이 내용을 분석해서 아래 JSON 형식으로 정리해주세요.
+
+자료:
+${truncated}
+
+출력 형식 (JSON 코드블록만):
+\`\`\`json
+{
+  "name": "이름",
+  "role": "직함 또는 역할 (예: 마케터, 개발자, 기획자)",
+  "tagline": "포트폴리오 대제목 — 전문성·포지셔닝을 한 문장으로 (예: '글로벌 60개국 데이터 표준화부터 1인 기업 AI 무인 자동화까지')",
+  "intro": "전문성과 강점이 드러나는 2~3문장. 문장 사이 \\n으로 줄바꿈 필수.",
+  "career": "소속·학교를 | 로 구분한 한 줄",
+  "stats": [
+    {"num": "대표 수치", "label": "설명"}
+  ],
+  "experiences": [
+    {"company": "회사명", "period": "기간 (예: 2021 · 현재)", "title": "직함", "desc": "한줄 설명"}
+  ],
+  "skills": ["스킬1", "스킬2", "툴1"],
+  "education": [
+    {"school": "학교 또는 기관명", "degree": "전공 또는 자격증명", "year": "연도"}
+  ],
+  "strengths": ["강점 제목: 한줄 설명 (구체적 수치나 역량 포함)"],
+  "projects": [
+    {
+      "category": "${catVals} 중 하나",
+      "title": "프로젝트 제목 (15자 이내, 성과 중심)",
+      "problem": "어떤 문제·배경? 한 문장.",
+      "solution": "어떻게 해결? 핵심 기술·방법 한 문장.",
+      "result": "결과·성과? 숫자 포함 한 문장.",
+      "tags": ["기술키워드1", "기술키워드2"],
+      "impacts": [{"num": "수치", "label": "설명"}],
+      "flow": [{"tool": "방법·도구", "desc": "역할"}]
+    }
+  ]
+}
+\`\`\`
+주의: stats는 최대 4개. strengths는 3~6개. projects는 최대 6개. impacts와 flow는 근거가 있을 때만 포함. intro는 문장 사이에 반드시 \\n 줄바꿈을 포함하세요.`;
+
+    const result = await callAI(prompt);
+    const data = parseJSON(result);
+
+    setProgress('fill');
+    await new Promise(r => setTimeout(r, 400));
+    fillAllFields(data);
+
+    document.getElementById('fill-notice').classList.add('show');
+    document.querySelector('.step').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch(e) {
+    alert('오류: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    spinner.style.display = 'none';
+    document.getElementById('btn-analyze-text').textContent = '다시 분석하기';
+    progress.querySelectorAll('.progress-step').forEach(el => el.className = 'progress-step done');
+  }
+}
+
+// ── FILL ALL FIELDS ──
+function fillAllFields(data) {
+  if (data.name) document.getElementById('name').value = data.name;
+  if (data.role) document.getElementById('role').value = data.role;
+  if (data.tagline) document.getElementById('tagline').value = data.tagline;
+  if (data.intro) document.getElementById('intro').value = data.intro;
+  if (data.career) document.getElementById('career').value = data.career;
+
+  if (data.stats && data.stats.length) {
+    document.getElementById('stats-container').innerHTML = '';
+    state.stats = [];
+    data.stats.slice(0, 4).forEach(s => addStat(s.num || '', s.label || ''));
+    if (state.stats.length < 2) addStat('', '');
+  }
+
+  if (data.experiences && data.experiences.length) {
+    document.getElementById('experiences-container').innerHTML = '';
+    state.experiences = [];
+    data.experiences.forEach(e => addExperience(e));
+  }
+  if (data.skills) {
+    document.getElementById('skills').value = Array.isArray(data.skills) ? data.skills.join(', ') : data.skills;
+  }
+  if (data.education && data.education.length) {
+    document.getElementById('education-container').innerHTML = '';
+    state.education = [];
+    data.education.forEach(e => addEducation(e));
+  }
+  if (data.strengths) {
+    document.getElementById('strengths').value = Array.isArray(data.strengths) ? data.strengths.join('\n') : data.strengths;
+  }
+  if (data.projects && data.projects.length) {
+    document.getElementById('projects-container').innerHTML = '';
+    state.projects = [];
+    data.projects.slice(0, 8).forEach(p => addProjectWithData(p));
+  }
+}
+
+
+// ── AI CALL ──
+async function callAI(prompt) {
+  const messages = [{ role: 'user', content: prompt }];
+  const entry = { prompt: prompt.slice(0, 2000), timestamp: new Date().toISOString(), response: null };
+
+  // 1. 프록시 우선 (Vercel 배포 / local-server.js)
+  try {
+    const res = await fetch('/api/ai', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages, max_tokens: 4096 })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error?.message || `API 오류 (${res.status})`);
+    const content = data.choices[0].message.content;
+    entry.response = content.slice(0, 2000);
+    _aiLog.push(entry);
+    return content;
+  } catch(e) {
+    if (!(e instanceof TypeError)) throw e;
+  }
+
+  // 2. 직접 API 호출 (프록시 미실행 환경)
+  const localKey = localStorage.getItem('api_key');
+  if (!localKey) throw new Error('node local-server.js 로 서버를 실행해주세요.');
+  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${localKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model: 'gpt-4o-mini', messages, max_tokens: 4096 })
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error?.message || '오류');
+  const content = data.choices[0].message.content;
+  entry.response = content.slice(0, 2000);
+  _aiLog.push(entry);
+  return content;
+}
+function parseJSON(text) {
+  // 코드블록 안 JSON 우선 추출
+  const m = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+  const raw = m ? m[1].trim() : text.trim();
+  try {
+    return JSON.parse(raw);
+  } catch(e) {
+    // 잘린 JSON 복구 시도: 마지막 완전한 항목까지만 파싱
+    const repaired = repairJSON(raw);
+    if (repaired) return repaired;
+    throw new Error('AI 응답을 파싱하지 못했어요. 다시 시도해주세요.');
+  }
+}
+function repairJSON(raw) {
+  // 배열이나 객체가 중간에 잘린 경우 복구 시도
+  try {
+    // 객체 복구: 마지막 완전한 키-값까지 잘라서 닫기
+    let s = raw.replace(/,\s*$/, '');
+    // 열린 배열/객체 닫기
+    const opens = (s.match(/\{/g)||[]).length - (s.match(/\}/g)||[]).length;
+    const aopens = (s.match(/\[/g)||[]).length - (s.match(/\]/g)||[]).length;
+    s += ']'.repeat(Math.max(0, aopens)) + '}'.repeat(Math.max(0, opens));
+    return JSON.parse(s);
+  } catch(e2) {
+    return null;
+  }
+}
+
+// ── AI: 기본정보 채우기 ──
+async function aiPolishIntro() {
+  const rough = document.getElementById('intro-rough').value.trim();
+  if (!rough) { alert('소개를 먼저 입력해주세요.'); return; }
+  const btn = document.getElementById('btn-intro-ai');
+  btn.classList.add('loading'); btn.disabled = true;
+  try {
+    const result = await callAI(`다음은 포트폴리오를 만들려는 사람의 자기소개입니다.
+입력: ${rough}
+
+아래 JSON 코드블록으로 정리해주세요:
+\`\`\`json
+{
+  "tagline": "포트폴리오 대제목 — 전문성·포지셔닝을 한 문장으로",
+  "intro": "전문성·강점이 드러나는 2~3문장. 문장 사이에는 반드시 \\n 줄바꿈을 삽입하세요.",
+  "career": "소속·학교를 | 로 구분한 한 줄"
+}
+\`\`\`
+중요: intro 필드의 각 문장 끝(마침표 또는 요.  뒤)에 반드시 \\n을 넣어 문장이 별도 줄에 표시되도록 하세요.`);
+    const json = parseJSON(result);
+    if (json.tagline) document.getElementById('tagline').value = json.tagline;
+    if (json.intro) document.getElementById('intro').value = json.intro;
+    if (json.career) document.getElementById('career').value = json.career;
+  } catch(e) { alert('오류: ' + e.message); }
+  finally { btn.classList.remove('loading'); btn.disabled = false; }
+}
+
+// ── AI: 핵심 강점 채우기 ──
+async function aiPolishStrengths() {
+  const rough = document.getElementById('strengths-rough').value.trim();
+  if (!rough) { alert('강점을 먼저 입력해주세요.'); return; }
+  const btn = document.getElementById('btn-strengths-ai');
+  btn.classList.add('loading'); btn.disabled = true;
+  try {
+    const result = await callAI(`다음은 포트폴리오를 만들려는 사람의 강점·전문성 정보입니다.
+입력: ${rough}
+
+핵심 강점 3~6개를 아래 JSON 코드블록으로 정리해주세요:
+\`\`\`json
+{
+  "strengths": ["강점 제목: 한줄 설명", "강점 제목: 한줄 설명"]
+}
+\`\`\`
+강점 제목은 3~5단어, 설명은 구체적 수치나 역량이 드러나게 15단어 이내로.`);
+    const json = parseJSON(result);
+    if (json.strengths) document.getElementById('strengths').value = json.strengths.join('\n');
+  } catch(e) { alert('오류: ' + e.message); }
+  finally { btn.classList.remove('loading'); btn.disabled = false; }
+}
+
+// ── AI: 대표 성과 채우기 ──
+async function aiPolishStats() {
+  const rough = document.getElementById('stats-rough').value.trim();
+  if (!rough) { alert('성과를 먼저 입력해주세요.'); return; }
+  const btn = document.getElementById('btn-stats-ai');
+  btn.classList.add('loading'); btn.disabled = true;
+  try {
+    const result = await callAI(`다음은 포트폴리오에 넣을 대표 성과 수치입니다.
+입력: ${rough}
+
+수치 카드 3~4개를 아래 JSON 코드블록으로 정리해주세요:
+\`\`\`json
+{
+  "stats": [
+    {"num": "200%", "label": "매출 성장"},
+    {"num": "50개", "label": "진행 프로젝트"}
+  ]
+}
+\`\`\`
+num은 임팩트 있는 숫자·수치, label은 2~4단어 설명.`);
+    const json = parseJSON(result);
+    if (json.stats && json.stats.length) {
+      document.getElementById('stats-container').innerHTML = '';
+      state.stats = [];
+      json.stats.slice(0, 4).forEach(s => addStat(s.num || '', s.label || ''));
+    }
+  } catch(e) { alert('오류: ' + e.message); }
+  finally { btn.classList.remove('loading'); btn.disabled = false; }
+}
+
+// ── AI: 경력 타임라인 채우기 ──
+async function aiPolishExperiences() {
+  const rough = document.getElementById('exp-rough').value.trim();
+  if (!rough) { alert('경력을 먼저 입력해주세요.'); return; }
+  const btn = document.getElementById('btn-exp-ai');
+  btn.classList.add('loading'); btn.disabled = true;
+  try {
+    const result = await callAI(`다음은 포트폴리오에 넣을 경력 정보입니다.
+입력: ${rough}
+
+아래 JSON 코드블록으로 정리해주세요:
+\`\`\`json
+{
+  "experiences": [
+    {"company": "회사명", "period": "기간 (예: 2021 · 현재)", "title": "직함", "desc": "한줄 설명"}
+  ]
+}
+\`\`\`
+최신순 정렬. 기간은 연도만 표기.`);
+    const json = parseJSON(result);
+    if (json.experiences && json.experiences.length) {
+      document.getElementById('experiences-container').innerHTML = '';
+      state.experiences = [];
+      json.experiences.forEach(e => addExperience(e));
+    }
+  } catch(e) { alert('오류: ' + e.message); }
+  finally { btn.classList.remove('loading'); btn.disabled = false; }
+}
+
+// ── AI: 스킬 채우기 ──
+async function aiPolishSkills() {
+  const rough = document.getElementById('skills-rough').value.trim();
+  if (!rough) { alert('스킬을 먼저 입력해주세요.'); return; }
+  const btn = document.getElementById('btn-skills-ai');
+  btn.classList.add('loading'); btn.disabled = true;
+  try {
+    const result = await callAI(`다음은 포트폴리오에 넣을 스킬·툴 정보입니다.
+입력: ${rough}
+
+아래 JSON 코드블록으로 정리해주세요:
+\`\`\`json
+{
+  "skills": ["스킬1", "스킬2:한줄 설명"]
+}
+\`\`\`
+핵심 스킬만 배열로. 설명이 필요한 것만 콜론(:) 뒤에 추가.`);
+    const json = parseJSON(result);
+    if (json.skills) document.getElementById('skills').value = json.skills.join(', ');
+  } catch(e) { alert('오류: ' + e.message); }
+  finally { btn.classList.remove('loading'); btn.disabled = false; }
+}
+
+// ── AI: 학력 채우기 ──
+async function aiPolishEducation() {
+  const rough = document.getElementById('edu-rough').value.trim();
+  if (!rough) { alert('학력을 먼저 입력해주세요.'); return; }
+  const btn = document.getElementById('btn-edu-ai');
+  btn.classList.add('loading'); btn.disabled = true;
+  try {
+    const result = await callAI(`다음은 포트폴리오에 넣을 학력·자격증 정보입니다.
+입력: ${rough}
+
+아래 JSON 코드블록으로 정리해주세요:
+\`\`\`json
+{
+  "education": [
+    {"school": "학교 또는 기관명", "degree": "전공 또는 자격증명", "year": "연도"}
+  ]
+}
+\`\`\``);
+    const json = parseJSON(result);
+    if (json.education && json.education.length) {
+      document.getElementById('education-container').innerHTML = '';
+      state.education = [];
+      json.education.forEach(e => addEducation(e));
+    }
+  } catch(e) { alert('오류: ' + e.message); }
+  finally { btn.classList.remove('loading'); btn.disabled = false; }
+}
+
+// ── AI: 전체 프로젝트 분류 ──
+async function aiPolishProjects() {
+  const rough = document.getElementById('projects-rough').value.trim();
+  if (!rough) { alert('프로젝트 경험을 먼저 입력해주세요.'); return; }
+  const btn = document.getElementById('btn-projects-ai');
+  btn.classList.add('loading'); btn.disabled = true;
+  try {
+    const catVals = CATEGORIES.map(c => c.val).join(', ');
+    const result = await callAI(`다음은 포트폴리오에 넣을 프로젝트·경험 목록입니다. 슬래시(/) 또는 줄바꿈으로 구분된 각 항목을 별도 프로젝트로 분리해주세요.
+입력: ${rough}
+
+아래 JSON 코드블록으로 최대 8개 프로젝트를 정리해주세요:
+\`\`\`json
+{
+  "projects": [
+    {
+      "category": "${catVals} 중 하나",
+      "title": "프로젝트 제목 (15자 이내, 성과 중심 명사형)",
+      "problem": "어떤 문제·배경이 있었나요? 한 문장.",
+      "solution": "어떻게 해결했나요? 핵심 기술·방법 한 문장.",
+      "result": "결과·성과는? 숫자 포함 한 문장.",
+      "tags": ["기술키워드1", "기술키워드2"],
+      "impacts": [{"num": "수치", "label": "설명"}],
+      "flow": [{"tool": "방법·도구", "desc": "역할"}]
+    }
+  ]
+}
+\`\`\`
+impacts는 정량적 성과가 있을 때만, flow는 프로세스가 명확할 때만 포함.`);
+    const json = parseJSON(result);
+    if (json.projects && json.projects.length) {
+      document.getElementById('projects-container').innerHTML = '';
+      state.projects = [];
+      json.projects.slice(0, 8).forEach(p => addProjectWithData(p));
+    }
+  } catch(e) { alert('오류: ' + e.message); }
+  finally { btn.classList.remove('loading'); btn.disabled = false; }
+}
+
+// ── AI: 프로젝트 개별 다듬기 ──
+async function aiPolishProject(cardId) {
+  const card = document.querySelector(`.project-card[data-id="${cardId}"]`);
+  const title = card.querySelector('[data-field="title"]').value.trim();
+  const problem = card.querySelector('[data-field="problem"]').value.trim();
+  const solution = card.querySelector('[data-field="solution"]').value.trim();
+  const result0 = card.querySelector('[data-field="result"]').value.trim();
+  if (!title && !problem && !solution) { alert('제목이나 내용을 먼저 입력해주세요.'); return; }
+  const btn = card.querySelector('.btn-ai-sm');
+  btn.classList.add('loading'); btn.disabled = true;
+  try {
+    const result = await callAI(`다음은 포트폴리오에 넣을 프로젝트 경험입니다.
+${title ? `제목: ${title}` : ''}
+${problem ? `문제: ${problem}` : ''}
+${solution ? `해결: ${solution}` : ''}
+${result0 ? `성과: ${result0}` : ''}
+
+아래 JSON 코드블록으로 더 임팩트 있게 정리해주세요:
+\`\`\`json
+{
+  "title": "프로젝트 제목 (15자 이내, 성과 중심 명사형)",
+  "problem": "어떤 문제·배경이 있었나요? 한 문장.",
+  "solution": "어떻게 해결했나요? 핵심 기술·방법 한 문장.",
+  "result": "결과·성과는? 숫자 포함 한 문장.",
+  "tags": ["기술키워드1", "기술키워드2", "기술키워드3"],
+  "impacts": [{"num": "수치", "label": "설명"}],
+  "flow": [{"tool": "방법·도구", "desc": "역할"}]
+}
+\`\`\`
+impacts는 정량적 성과가 있을 때만, flow는 프로세스가 명확할 때만 포함.`);
+    const json = parseJSON(result);
+    if (json.title) card.querySelector('[data-field="title"]').value = json.title;
+    if (json.problem) card.querySelector('[data-field="problem"]').value = json.problem;
+    if (json.solution) card.querySelector('[data-field="solution"]').value = json.solution;
+    if (json.result) card.querySelector('[data-field="result"]').value = json.result;
+    if (json.tags) card.querySelector('[data-field="tags"]').value = json.tags.join(', ');
+    if (json.impacts) card.querySelector('[data-field="impacts"]').value = json.impacts.map(i=>`${i.num}|${i.label}`).join(', ');
+    if (json.flow && json.flow.length) {
+      const container = card.querySelector('[data-flow-container]');
+      container.innerHTML = '';
+      json.flow.forEach(f => {
+        const div = document.createElement('div'); div.className = 'flow-item';
+        div.innerHTML = `<input type="text" data-field="flow-tool" value="${esc(f.tool)}" placeholder="방법·도구"><input type="text" data-field="flow-desc" value="${esc(f.desc)}" placeholder="역할"><button class="btn-remove" onclick="this.closest('.flow-item').remove()">×</button>`;
+        container.appendChild(div);
+      });
+    }
+  } catch(e) { alert('오류: ' + e.message); }
+  finally { btn.classList.remove('loading'); btn.disabled = false; }
+}
+
+// ── EXPERIENCE ──
+function buildExpRow(id, data={}) {
+  const div = document.createElement('div');
+  div.className = 'exp-row'; div.dataset.id = id;
+  div.style.cssText = 'border:1.5px solid var(--border);border-radius:8px;padding:14px 16px;margin-bottom:10px;position:relative';
+  div.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">
+      <div class="field" style="margin:0"><label>회사 / 조직</label><input type="text" data-field="company" value="${esc(data.company||'')}" placeholder="예) 루즈루틴"></div>
+      <div class="field" style="margin:0"><label>기간</label><input type="text" data-field="period" value="${esc(data.period||'')}" placeholder="예) 2024 · 현재"></div>
+      <div class="field" style="margin:0"><label>직함</label><input type="text" data-field="title" value="${esc(data.title||'')}" placeholder="예) 파운더"></div>
+    </div>
+    <div class="field" style="margin:0"><label>한줄 설명 <span style="color:var(--text4);font-weight:400">(선택)</span></label><input type="text" data-field="desc" value="${esc(data.desc||'')}" placeholder="주요 업무나 성과 한 줄"></div>
+    <button class="btn-remove" style="position:absolute;top:10px;right:10px" onclick="removeExperience('${id}')">×</button>`;
+  return div;
+}
+function addExperience(data) {
+  const id = 'exp_' + Date.now() + Math.random();
+  state.experiences.push(id);
+  document.getElementById('experiences-container').appendChild(buildExpRow(id, data||{}));
+}
+function removeExperience(id) {
+  state.experiences = state.experiences.filter(e => e !== id);
+  document.querySelector(`.exp-row[data-id="${id}"]`).remove();
+}
+
+// ── EDUCATION ──
+function buildEduRow(id, data={}) {
+  const div = document.createElement('div');
+  div.className = 'edu-row'; div.dataset.id = id;
+  div.style.cssText = 'border:1.5px solid var(--border);border-radius:8px;padding:14px 16px;margin-bottom:10px;position:relative';
+  div.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr 80px;gap:10px">
+      <div class="field" style="margin:0"><label>학교 / 기관</label><input type="text" data-field="school" value="${esc(data.school||'')}" placeholder="예) 건국대학교"></div>
+      <div class="field" style="margin:0"><label>전공 / 자격증명</label><input type="text" data-field="degree" value="${esc(data.degree||'')}" placeholder="예) 산업공학과 졸업"></div>
+      <div class="field" style="margin:0"><label>연도</label><input type="text" data-field="year" value="${esc(data.year||'')}" placeholder="2018"></div>
+    </div>
+    <button class="btn-remove" style="position:absolute;top:10px;right:10px" onclick="removeEducation('${id}')">×</button>`;
+  return div;
+}
+function addEducation(data) {
+  const id = 'edu_' + Date.now() + Math.random();
+  state.education.push(id);
+  document.getElementById('education-container').appendChild(buildEduRow(id, data||{}));
+}
+function removeEducation(id) {
+  state.education = state.education.filter(e => e !== id);
+  document.querySelector(`.edu-row[data-id="${id}"]`).remove();
+}
+
+// ── STAT ──
+function addStat(num='', label='', phNum='예) 80%', phLabel='예) 재구매율') {
+  if (state.stats.length >= 4) return;
+  const id = Date.now() + Math.random();
+  state.stats.push(id);
+  const div = document.createElement('div');
+  div.className = 'stat-row'; div.dataset.id = id;
+  div.innerHTML = `<input type="text" placeholder="${phNum}" value="${esc(num)}" data-field="num" style="font-weight:700;text-align:center"><input type="text" placeholder="${phLabel}" value="${esc(label)}" data-field="label"><button class="btn-remove" onclick="removeStat(${id})">×</button>`;
+  document.getElementById('stats-container').appendChild(div);
+}
+function removeStat(id) {
+  state.stats = state.stats.filter(s => s !== id);
+  document.querySelector(`.stat-row[data-id="${id}"]`).remove();
+}
+
+// ── PROJECT ──
+function buildProjectCard(id, idx, data) {
+  const catOpts = CATEGORIES.map(o => `<option value="${o.val}"${data.category===o.val?' selected':''}>${o.label}</option>`).join('');
+  const tagsVal = esc((data.tags||[]).join(', '));
+  const impactsVal = esc((data.impacts||[]).map(i=>`${i.num}|${i.label}`).join(', '));
+  const div = document.createElement('div');
+  div.className = 'project-card'; div.dataset.id = id;
+  div.innerHTML = `
+    <div class="project-card-header">
+      <span class="project-num">PROJECT ${String(idx).padStart(2,'0')}</span>
+      <div style="display:flex;gap:6px;align-items:center">
+        <button class="btn-ai-sm" onclick="aiPolishProject('${id}')"><span class="btn-ai-text">✦ 다듬기</span><span class="spinner"></span></button>
+        <button class="btn-remove" onclick="removeProject('${id}')">×</button>
+      </div>
+    </div>
+    <div class="field-row col2" style="margin-bottom:12px">
+      <div class="field" style="margin:0"><label>카테고리</label><select data-field="category">${catOpts}</select></div>
+      <div class="field" style="margin:0"><label>프로젝트 제목</label><input type="text" data-field="title" value="${esc(data.title||'')}" placeholder="예) 블로그 자동화 파이프라인 구축"></div>
+    </div>
+    <div class="field" style="margin-bottom:8px"><label><span style="color:#0891b2;font-weight:700">문제</span> <span style="color:var(--text4);font-weight:400">어떤 문제·배경이 있었나요?</span></label><input type="text" data-field="problem" value="${esc(data.problem||'')}" placeholder="예) 전문 인력 없이 콘텐츠 정기 발행 불가"></div>
+    <div class="field" style="margin-bottom:8px"><label><span style="color:#0891b2;font-weight:700">해결</span> <span style="color:var(--text4);font-weight:400">어떻게 접근했나요?</span></label><input type="text" data-field="solution" value="${esc(data.solution||'')}" placeholder="예) n8n·LLM으로 단일 소스 → 멀티채널 자동화 파이프라인 구축"></div>
+    <div class="field" style="margin-bottom:12px"><label><span style="color:#059669;font-weight:700">성과</span> <span style="color:var(--text4);font-weight:400">결과는 어떻게 됐나요?</span></label><input type="text" data-field="result" value="${esc(data.result||data.desc||'')}" placeholder="예) 콘텐츠 제작 리드타임 87% 절감, 1인 운영 체제 완결"></div>
+    <div class="field-row col2" style="margin-bottom:12px">
+      <div class="field" style="margin:0"><label>키워드 <span style="color:var(--text4);font-weight:400">(쉼표 구분)</span></label><input type="text" data-field="tags" value="${tagsVal}" placeholder="n8n, LLM, 콘텐츠 자동화"></div>
+      <div class="field" style="margin:0"><label>성과 <span style="color:var(--text4);font-weight:400">(수치|설명, 쉼표)</span></label><input type="text" data-field="impacts" value="${impactsVal}" placeholder="10배|오가닉 전환율 MoM, 80%|재구매율"></div>
+    </div>
+    <div class="field" style="margin:0">
+      <label>프로세스 흐름 <span style="color:var(--text4);font-weight:400">(선택)</span></label>
+      <div class="flow-items" data-flow-container></div>
+      <button class="btn-add" style="margin-top:6px" onclick="addFlowItem('${id}')">+ 단계 추가</button>
+    </div>`;
+
+  // fill flow
+  const flowContainer = div.querySelector('[data-flow-container]');
+  const flows = data.flow && data.flow.length ? data.flow : [{ tool: '', desc: '' }];
+  flows.forEach(f => {
+    const fi = document.createElement('div'); fi.className = 'flow-item';
+    fi.innerHTML = `<input type="text" data-field="flow-tool" value="${esc(f.tool||'')}" placeholder="방법·도구"><input type="text" data-field="flow-desc" value="${esc(f.desc||'')}" placeholder="역할"><button class="btn-remove" onclick="this.closest('.flow-item').remove()">×</button>`;
+    flowContainer.appendChild(fi);
+  });
+
+  return div;
+}
+
+function addProject(data) {
+  if (state.projects.length >= 8) return;
+  const id = 'proj_' + Date.now();
+  const idx = state.projects.length + 1;
+  state.projects.push(id);
+  document.getElementById('projects-container').appendChild(buildProjectCard(id, idx, data || {}));
+}
+function addProjectWithData(data) { addProject(data); }
+
+function removeProject(id) {
+  state.projects = state.projects.filter(p => p !== id);
+  document.querySelector(`.project-card[data-id="${id}"]`).remove();
+  document.querySelectorAll('.project-card .project-num').forEach((el,i) => el.textContent = 'PROJECT ' + String(i+1).padStart(2,'0'));
+}
+function addFlowItem(projectId) {
+  const card = document.querySelector(`.project-card[data-id="${projectId}"]`);
+  const div = document.createElement('div'); div.className = 'flow-item';
+  div.innerHTML = `<input type="text" data-field="flow-tool" placeholder="방법·도구"><input type="text" data-field="flow-desc" placeholder="역할"><button class="btn-remove" onclick="this.closest('.flow-item').remove()">×</button>`;
+  card.querySelector('[data-flow-container]').appendChild(div);
+}
+
+// ── COLLECT & GENERATE ──
+function collectData() {
+  const g = id => (document.getElementById(id)||{}).value?.trim()||'';
+  const stats = [...document.querySelectorAll('.stat-row')].map(r=>({ num: r.querySelector('[data-field="num"]').value.trim(), label: r.querySelector('[data-field="label"]').value.trim() })).filter(s=>s.num||s.label);
+  const experiences = [...document.querySelectorAll('.exp-row')].map(r=>({
+    company: r.querySelector('[data-field="company"]').value.trim(),
+    period: r.querySelector('[data-field="period"]').value.trim(),
+    title: r.querySelector('[data-field="title"]').value.trim(),
+    desc: r.querySelector('[data-field="desc"]').value.trim()
+  })).filter(e=>e.company||e.title);
+  const skills = (document.getElementById('skills').value||'').split(',').map(s=>s.trim()).filter(Boolean);
+  const education = [...document.querySelectorAll('.edu-row')].map(r=>({
+    school: r.querySelector('[data-field="school"]').value.trim(),
+    degree: r.querySelector('[data-field="degree"]').value.trim(),
+    year: r.querySelector('[data-field="year"]').value.trim()
+  })).filter(e=>e.school||e.degree);
+  const projects = [...document.querySelectorAll('.project-card')].map((card,i)=>{
+    const f = field => (card.querySelector(`[data-field="${field}"]`)||{}).value?.trim()||'';
+    return {
+      category: f('category'), num: String(i+1).padStart(2,'0'), title: f('title'),
+      problem: f('problem'), solution: f('solution'), result: f('result'),
+      tags: f('tags').split(',').map(t=>t.trim()).filter(Boolean),
+      impacts: f('impacts').split(',').map(s=>{ const [n,l]=s.split('|').map(x=>x.trim()); return n&&l?{num:n,label:l}:null; }).filter(Boolean),
+      flow: [...card.querySelectorAll('.flow-item')].map(fi=>({ tool: fi.querySelector('[data-field="flow-tool"]').value.trim(), desc: fi.querySelector('[data-field="flow-desc"]').value.trim() })).filter(fi=>fi.tool)
+    };
+  }).filter(p=>p.title);
+  const strengths = (document.getElementById('strengths').value||'').split('\n').map(s=>s.trim()).filter(Boolean);
+  return { name: g('name'), role: g('role'), tagline: g('tagline'), career: g('career'), intro: g('intro'), stats, experiences, skills, education, projects, strengths };
+}
+function generate() {
+  const data = collectData();
+  if (!data.name) { alert('이름을 입력해주세요.'); return; }
+  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+  const base = location.origin + '/portfolio.html';
+  const link = `${base}#${encoded}`;
+  document.getElementById('result-link').textContent = link;
+  const box = document.getElementById('result-box'); box.classList.add('show'); box._link = link;
+  box.scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+function copyLink() {
+  navigator.clipboard.writeText(document.getElementById('result-box')._link).then(()=>{
+    const btn = document.querySelector('.btn-copy'); btn.textContent = '✓ 복사됨';
+    setTimeout(()=>btn.textContent='링크 복사',1800);
+  });
+}
+function previewPortfolio() { window.open(document.getElementById('result-box')._link,'_blank'); }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ── SETTINGS ──
+const SB_SQL = `CREATE TABLE portfolio_sessions (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  created_at timestamptz DEFAULT now(),
+  name text,
+  role text,
+  uploaded_file_name text,
+  uploaded_file_content text,
+  raw_inputs jsonb,
+  ai_exchanges jsonb,
+  portfolio_json jsonb,
+  portfolio_url text
+);
+
+-- RLS: anon insert 허용, 조회는 authenticated만
+ALTER TABLE portfolio_sessions ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "anon insert" ON portfolio_sessions
+  FOR INSERT TO anon WITH CHECK (true);
+CREATE POLICY "auth select" ON portfolio_sessions
+  FOR SELECT TO authenticated USING (true);`;
+
+function openSettings() {
+  document.getElementById('setting-api-key').value = localStorage.getItem('api_key') || '';
+  document.getElementById('settings-modal').classList.add('show');
+}
+function closeSettings() {
+  document.getElementById('settings-modal').classList.remove('show');
+}
+function saveSettings() {
+  const apiKey = document.getElementById('setting-api-key').value.trim();
+  if (apiKey) localStorage.setItem('api_key', apiKey); else localStorage.removeItem('api_key');
+  closeSettings();
+  const btn = document.getElementById('btn-settings');
+  btn.textContent = '✅';
+  setTimeout(() => btn.textContent = '⚙️', 1500);
+}
+
+// ── SUPABASE SAVE ──
+async function saveToSupabase(portfolioData, portfolioUrl) {
+  const sbUrl = SUPABASE_URL;
+  const sbKey = SUPABASE_ANON_KEY;
+  if (!sbUrl || !sbKey) return { error: 'Supabase 미설정 — generator.html 상단 SUPABASE_URL / SUPABASE_ANON_KEY를 입력해주세요.' };
+
+  try {
+    const client = window.supabase.createClient(sbUrl, sbKey);
+    const g = id => (document.getElementById(id)||{}).value || '';
+    const { error } = await client.from('portfolio_sessions').insert({
+      name: portfolioData.name || null,
+      role: portfolioData.role || null,
+      uploaded_file_name:    _fileInfo?.name    || null,
+      uploaded_file_content: _fileContent       || null,
+      raw_inputs: {
+        intro_rough:    g('intro-rough'),
+        strengths_rough:g('strengths-rough'),
+        stats_rough:    g('stats-rough'),
+        exp_rough:      g('exp-rough'),
+        skills_rough:   g('skills-rough'),
+        edu_rough:      g('edu-rough'),
+        projects_rough: g('projects-rough'),
+      },
+      ai_exchanges:   _aiLog,
+      portfolio_json: portfolioData,
+      portfolio_url:  portfolioUrl,
+    });
+    return { ok: !error };
+  } catch(e) {
+    return { error: e.message };
+  }
+}
+
+// ── DEPLOY ──
+async function deployPortfolio() {
+  const data = collectData();
+  if (!data.name) { alert('이름을 입력해주세요.'); return; }
+
+  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+  const url = location.origin + '/portfolio.html#' + encoded;
+
+  await navigator.clipboard.writeText(url);
+
+  const btn = document.getElementById('btn-deploy');
+  btn.textContent = '✓ 복사됨';
+  setTimeout(() => { btn.textContent = '▲ 배포 / 저장'; }, 2000);
+
+  saveToSupabase(data, url); // fire-and-forget
+}
+</script>
+</body>
+</html>

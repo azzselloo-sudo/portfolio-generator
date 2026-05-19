@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title id="page-title">포트폴리오</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --ink:#1e293b; --ink2:#334155; --sub:#64748b; --muted:#94a3b8;
+  --line:#e2e8f0; --bg:#f8fafc; --white:#ffffff;
+  --blue:#0a58ca; --blue-lt:#eff6ff; --blue-dk:#0847a8;
+  --sidebar-w:252px;
+  --cat-generate:#d4713a;
+  --cat-automate:#27a84e;
+  --cat-intelligize:#3b82c9;
+  --cat-education:#7c3aed;
+  --cat-community:#0891b2;
+}
+html { scroll-behavior: smooth; }
+body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: var(--ink); font-size: 15px; line-height: 1.7; -webkit-font-smoothing: antialiased; }
+
+/* SIDEBAR */
+.sidebar { position:fixed; top:0; left:0; width:var(--sidebar-w); height:100vh; background:#09090f; display:flex; flex-direction:column; padding:32px 0; z-index:100; overflow-y:auto; }
+.sidebar-logo { padding:0 24px 24px; border-bottom:1px solid rgba(255,255,255,0.06); }
+.sidebar-logo .name { font-size:13px; font-weight:700; color:#fff; margin-bottom:3px; }
+.sidebar-logo .sub { font-size:10.5px; color:rgba(255,255,255,0.3); letter-spacing:0.04em; }
+.sidebar-nav { padding:16px 0; flex:1; }
+.nav-cat { padding:16px 24px 6px; }
+.nav-cat:first-child { padding-top:8px; }
+.cat-pill { display:inline-flex; align-items:center; gap:6px; font-size:10px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; padding:3px 8px; border-radius:20px; }
+/* 구버전 카테고리 */
+.cat-gen   { background:rgba(201,125,78,0.18);  color:#f0b47a; }
+.cat-auto  { background:rgba(108,184,108,0.18); color:#a8d8a8; }
+.cat-intel { background:rgba(122,154,181,0.18); color:#b5cde3; }
+.cat-edu   { background:rgba(124,58,237,0.18);  color:#c4b5fd; }
+.cat-comm  { background:rgba(8,145,178,0.18);   color:#7dd3e8; }
+/* 신규 카테고리 */
+.cat-planning  { background:rgba(8,145,178,0.18);   color:#7dd3e8; }
+.cat-dev       { background:rgba(99,102,241,0.18);  color:#c7d2fe; }
+.cat-marketing { background:rgba(217,119,6,0.18);   color:#fcd34d; }
+.cat-design    { background:rgba(236,72,153,0.18);  color:#f9a8d4; }
+.cat-sales     { background:rgba(5,150,105,0.18);   color:#6ee7b7; }
+.cat-ops       { background:rgba(100,116,139,0.18); color:#cbd5e1; }
+.cat-research  { background:rgba(2,132,199,0.18);   color:#7dd3fc; }
+.cat-content   { background:rgba(234,88,12,0.18);   color:#fdba74; }
+.cat-etc       { background:rgba(71,85,105,0.18);   color:#94a3b8; }
+.nav-link { display:flex; align-items:flex-start; gap:9px; padding:7px 24px; font-size:12px; color:rgba(255,255,255,0.42); text-decoration:none; border-left:2px solid transparent; transition:all .15s; line-height:1.45; }
+.nav-link:hover { color:rgba(255,255,255,0.8); background:rgba(255,255,255,0.04); }
+.nav-link.active { color:#fff; background:rgba(37,99,235,0.12); border-left-color:var(--blue); }
+.nav-num { font-size:10px; font-weight:700; color:rgba(255,255,255,0.18); flex-shrink:0; font-family:monospace; margin-top:1px; }
+.sidebar-foot { padding:20px 24px 0; border-top:1px solid rgba(255,255,255,0.06); }
+.sidebar-foot p { font-size:10.5px; color:rgba(255,255,255,0.22); line-height:1.7; }
+.sidebar-edit { display:block; margin-top:12px; font-size:10.5px; color:rgba(255,255,255,0.3); text-decoration:none; padding:6px 10px; border:1px solid rgba(255,255,255,0.1); border-radius:5px; text-align:center; transition:all .15s; }
+.sidebar-edit:hover { color:#fff; border-color:rgba(255,255,255,0.3); background:rgba(255,255,255,0.05); }
+
+/* MAIN */
+.main { margin-left:var(--sidebar-w); }
+
+/* HERO */
+.hero { background:#09090f; padding:72px 80px 64px; position:relative; overflow:hidden; }
+.hero::after { content:''; position:absolute; top:-150px; right:-80px; width:550px; height:550px; background:radial-gradient(circle,rgba(10,88,202,0.1) 0%,transparent 68%); pointer-events:none; }
+.eyebrow { font-size:11px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:#a8d8a8; margin-bottom:20px; }
+.hero-name { font-size:13px; font-weight:700; color:rgba(255,255,255,.55); margin-bottom:4px; letter-spacing:.01em; }
+.hero-sub { font-size:0.95rem; color:rgba(255,255,255,0.42); line-height:1.9; margin-bottom:44px; max-width:600px; white-space:pre-line; }
+.stats { display:flex; gap:44px; flex-wrap:wrap; }
+.stat strong { display:block; font-size:1.8rem; font-weight:700; color:#fff; letter-spacing:-0.03em; line-height:1; margin-bottom:5px; }
+.stat span { font-size:11px; color:rgba(255,255,255,0.3); }
+
+/* CAT DIVIDER */
+.cat-divider { padding:0 80px; background:var(--bg); border-bottom:1px solid var(--line); border-top:1px solid var(--line); }
+.cat-divider-inner { display:flex; align-items:center; gap:16px; padding:20px 0; }
+.cat-label-big { font-size:13px; font-weight:700; letter-spacing:-0.01em; white-space:nowrap; display:flex; align-items:center; gap:8px; }
+.cat-label-big .dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.cat-line { flex:1; height:1px; background:var(--line); }
+
+/* SECTION */
+.section { padding:72px 80px; border-bottom:1px solid var(--line); opacity:0; transform:translateY(18px); transition:opacity .5s,transform .5s; }
+.section.visible { opacity:1; transform:none; }
+.section-num { font-size:10px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+.section-title { font-size:1.65rem; font-weight:700; letter-spacing:-0.025em; margin-bottom:10px; line-height:1.3; }
+.section-desc { font-size:0.9rem; color:var(--sub); max-width:680px; margin-bottom:28px; line-height:1.85; }
+.psr-block { margin-bottom:28px; display:flex; flex-direction:column; gap:4px; }
+.psr-row { font-size:0.9rem; color:var(--ink2); line-height:1.75; display:flex; align-items:baseline; gap:10px; }
+.psr-lbl { font-size:11px; font-weight:700; white-space:nowrap; min-width:28px; }
+.psr-prob { color:#0891b2; }
+.psr-sol  { color:#0891b2; }
+.psr-res  { color:#059669; }
+.tags { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:32px; }
+.tag { font-size:11px; font-weight:600; background:var(--bg); color:var(--ink2); padding:3px 9px; border-radius:4px; border:1px solid var(--line); }
+
+/* FLOW */
+.flow { display:flex; border:1px solid var(--line); border-radius:8px; overflow:hidden; margin-bottom:32px; }
+.flow-step { flex:1; padding:14px 12px; background:var(--white); border-right:1px solid var(--line); position:relative; }
+.flow-step:last-child { border-right:none; }
+.flow-num { font-size:9px; font-weight:700; color:var(--blue); letter-spacing:.1em; margin-bottom:4px; }
+.flow-tool { font-size:12px; font-weight:700; margin-bottom:2px; }
+.flow-desc { font-size:10.5px; color:var(--sub); line-height:1.5; }
+.flow-arr { position:absolute; right:-8px; top:50%; transform:translateY(-50%); width:15px; height:15px; background:var(--bg); border:1px solid var(--line); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:7px; color:var(--muted); z-index:1; }
+.flow-step:last-child .flow-arr { display:none; }
+
+/* IMPACT */
+.impact { display:grid; gap:1px; background:var(--line); border:1px solid var(--line); border-radius:8px; overflow:hidden; margin-bottom:32px; }
+.impact.c2 { grid-template-columns:repeat(2,1fr); }
+.impact.c3 { grid-template-columns:repeat(3,1fr); }
+.impact.c4 { grid-template-columns:repeat(4,1fr); }
+.ic { background:var(--white); padding:18px 16px; text-align:center; }
+.ic-n { font-size:1.65rem; font-weight:700; letter-spacing:-.03em; display:block; margin-bottom:3px; }
+.ic-l { font-size:11px; color:var(--sub); line-height:1.4; }
+
+/* EXPERIENCE */
+.exp-list { display:flex; flex-direction:column; }
+.exp-item { display:grid; grid-template-columns:130px 1fr; gap:28px; padding:22px 0; border-bottom:1px solid var(--line); }
+.exp-item:last-child { border-bottom:none; }
+.exp-period { font-size:11px; color:var(--muted); margin-bottom:4px; font-weight:600; letter-spacing:.02em; }
+.exp-company { font-size:12px; font-weight:700; color:var(--sub); }
+.exp-title { font-size:15px; font-weight:700; margin-bottom:6px; }
+.exp-desc { font-size:13px; color:var(--sub); line-height:1.7; }
+
+/* SKILLS */
+.skills-grid { display:flex; flex-wrap:wrap; gap:8px; }
+.skill-chip { font-size:12px; font-weight:600; background:var(--blue-lt); color:var(--blue); padding:5px 14px; border-radius:20px; border:1px solid rgba(37,99,235,0.15); }
+
+/* EDUCATION */
+.edu-list { display:flex; flex-direction:column; gap:18px; }
+.edu-item { display:flex; gap:20px; align-items:baseline; }
+.edu-year { font-size:11px; color:var(--muted); flex-shrink:0; width:40px; font-weight:600; }
+.edu-school { font-size:14px; font-weight:700; }
+.edu-degree { font-size:13px; color:var(--sub); margin-top:2px; }
+
+/* NO DATA */
+.empty-state { text-align:center; padding:80px 40px; color:var(--muted); font-size:14px; }
+
+/* FOOTER CTA */
+.site-footer { background: #09090f; padding: 48px 80px; border-top: 1px solid rgba(255,255,255,0.06); }
+.footer-inner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px; }
+.footer-made { font-size: 13px; color: rgba(255,255,255,0.35); }
+.footer-name { color: rgba(255,255,255,0.7); text-decoration: none; font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.2); transition: color .15s; }
+.footer-name:hover { color: #fff; }
+.footer-links { display: flex; gap: 10px; flex-wrap: wrap; }
+.footer-btn { font-size: 12px; font-weight: 600; padding: 9px 18px; border-radius: 6px; text-decoration: none; transition: all .15s; white-space: nowrap; font-family: 'Noto Sans KR', sans-serif; }
+.footer-btn-outline { border: 1px solid rgba(255,255,255,0.15); color: rgba(255,255,255,0.55); }
+.footer-btn-outline:hover { border-color: rgba(255,255,255,0.4); color: #fff; }
+.footer-btn-solid { background: var(--blue); color: #fff; border: 1px solid transparent; }
+.footer-btn-solid:hover { background: var(--blue-dk); }
+
+/* HERO TAGLINE / ROLE */
+.hero-tagline { font-size:2rem; font-weight:700; color:#fff; line-height:1.35; letter-spacing:-0.025em; margin-bottom:14px; max-width:640px; }
+.hero-role { font-size:1.05rem; font-weight:500; color:var(--blue); margin-bottom:20px; letter-spacing:-0.01em; }
+
+/* CAREER JOURNEY */
+.career-journey { display:grid; align-items:center; gap:0; }
+.cj-card { padding:16px 20px; background:var(--white); border:1px solid var(--line); border-radius:8px; }
+.cj-card.cj-current { background:#09090f; border-color:#09090f; }
+.cj-period { font-size:10px; color:var(--muted); margin-bottom:4px; }
+.cj-company { font-size:12.5px; font-weight:700; margin-bottom:2px; }
+.cj-title { font-size:11.5px; color:var(--sub); line-height:1.5; }
+.cj-desc { font-size:11px; color:var(--sub); margin-top:4px; line-height:1.4; }
+.cj-current .cj-period { color:rgba(255,255,255,.35); }
+.cj-current .cj-company { color:#fff; }
+.cj-current .cj-title,.cj-current .cj-desc { color:rgba(255,255,255,.5); }
+.cj-arrow { padding:0 10px; color:var(--muted); font-size:18px; text-align:center; }
+
+/* STACK GRID */
+.stack-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(170px,1fr)); gap:10px; }
+.stack-item { border:1px solid var(--line); border-radius:8px; padding:13px 15px; background:var(--white); transition:border-color .15s; }
+.stack-item:hover { border-color:#bfdbfe; }
+.sn { font-size:12.5px; font-weight:700; margin-bottom:3px; }
+.sr { font-size:11px; color:var(--sub); line-height:1.5; }
+
+/* SPEC TABLE */
+.spec { width:100%; border-collapse:collapse; font-size:12.5px; margin-top:16px; }
+.spec td { padding:8px 12px; border-bottom:1px solid var(--line); vertical-align:top; }
+.spec td:first-child { font-weight:600; color:var(--sub); white-space:nowrap; width:120px; font-size:11.5px; }
+.spec tr:last-child td { border-bottom:none; }
+.spec thead td { font-weight:700; color:var(--ink2); font-size:11px; letter-spacing:.06em; text-transform:uppercase; background:var(--bg); }
+.badge-green { font-size:11px; font-weight:700; background:#dcfce7; color:#15803d; padding:2px 8px; border-radius:3px; }
+
+/* ARCH */
+.arch { border:1px solid var(--line); border-radius:10px; overflow:hidden; margin-bottom:28px; }
+.arch-t { padding:12px 16px; background:var(--bg); border-bottom:1px solid var(--line); font-size:11.5px; font-weight:700; color:var(--sub); letter-spacing:.06em; text-transform:uppercase; }
+.arch-b { padding:18px 16px; display:flex; flex-direction:column; gap:8px; }
+.arch-row { display:flex; align-items:center; gap:10px; }
+.an { font-size:12px; font-weight:600; padding:5px 11px; border-radius:5px; white-space:nowrap; }
+.a-in { background:#f1f5f9; color:#475569; }
+.a-ai { background:#eff6ff; color:#1d4ed8; }
+.a-pro { background:#fdf4ec; color:#a0622a; }
+.a-out { background:#f0f9ff; color:#0369a1; }
+.aa { color:var(--muted); font-size:12px; }
+.ad { font-size:11px; color:var(--sub); flex:1; }
+
+/* ACHIEVEMENT BADGES */
+.abadges { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:20px; }
+.ab { font-size:10.5px; font-weight:700; padding:2px 9px; border-radius:3px; border:1px solid; }
+.ab-g { background:#f0faf3; color:#1e7a3c; border-color:#b4e4c4; }
+.ab-o { background:#fdf4ec; color:#b05c20; border-color:#f5c89a; }
+.ab-b { background:#eef4ff; color:#2653a8; border-color:#b8cef5; }
+
+/* BULLETS / SPLIT */
+.bullets { list-style:none; display:flex; flex-direction:column; gap:7px; }
+.bullets li { font-size:.875rem; color:var(--ink2); padding-left:14px; position:relative; line-height:1.6; }
+.bullets li::before { content:'·'; position:absolute; left:0; color:var(--blue); font-weight:700; }
+.split { display:grid; grid-template-columns:1fr 1fr; gap:48px; align-items:start; }
+.sc h3 { font-size:1rem; font-weight:700; margin-bottom:10px; }
+.sc p { font-size:.875rem; color:var(--sub); margin-bottom:12px; line-height:1.8; }
+.g2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.g3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
+
+/* ── EDIT MODE ── */
+.sidebar-edit-row { display:flex; flex-direction:column; gap:6px; margin-top:12px; }
+.sidebar-edit { display:block; font-size:10.5px; color:rgba(255,255,255,0.3); text-decoration:none; padding:6px 10px; border:1px solid rgba(255,255,255,0.1); border-radius:5px; text-align:center; transition:all .15s; background:none; cursor:pointer; font-family:inherit; width:100%; box-sizing:border-box; }
+.sidebar-edit:hover { color:#fff; border-color:rgba(255,255,255,0.3); background:rgba(255,255,255,0.05); }
+.sidebar-edit.active { background:rgba(99,102,241,.2); border-color:rgba(99,102,241,.5); color:#c7d2fe; }
+.edit-bar { position:fixed; bottom:0; left:var(--sidebar-w); right:0; background:#fff; border-top:2px solid #6366f1; padding:12px 48px; display:none; align-items:center; justify-content:space-between; z-index:300; box-shadow:0 -4px 24px rgba(0,0,0,.1); }
+.edit-bar.show { display:flex; }
+.edit-bar-hint { font-size:12px; color:var(--sub); }
+.btn-edit-save { background:#6366f1; color:#fff; border:none; font-family:inherit; font-size:13px; font-weight:700; padding:9px 22px; border-radius:6px; cursor:pointer; }
+.btn-edit-save:hover { background:#4f46e5; }
+.btn-edit-cancel { background:none; color:var(--sub); border:1px solid var(--line); font-family:inherit; font-size:13px; padding:9px 16px; border-radius:6px; cursor:pointer; margin-right:8px; }
+body.edit-mode [data-e] { outline:1.5px dashed rgba(99,102,241,.4); border-radius:3px; cursor:text; }
+body.edit-mode [data-e]:hover { outline-color:rgba(99,102,241,.7); }
+body.edit-mode [data-e]:focus { outline:2px solid #6366f1; background:rgba(99,102,241,.06); box-shadow:0 0 0 4px rgba(99,102,241,.08); border-radius:3px; }
+.proj-img { width:100%; border-radius:8px; object-fit:cover; max-height:320px; display:block; margin-bottom:24px; }
+.edit-img-zone { display:none; align-items:center; gap:8px; margin-bottom:20px; padding:10px 14px; background:var(--bg); border:1.5px dashed var(--line); border-radius:8px; flex-wrap:wrap; }
+body.edit-mode .edit-img-zone { display:flex; }
+.edit-img-url { flex:1; min-width:200px; background:#fff; border:1px solid var(--line); border-radius:5px; padding:6px 10px; font-size:12px; color:var(--ink); font-family:inherit; outline:none; }
+.edit-img-url:focus { border-color:#6366f1; }
+.edit-img-file-lbl { font-size:11px; font-weight:600; color:var(--sub); border:1px solid var(--line); padding:5px 10px; border-radius:5px; cursor:pointer; white-space:nowrap; }
+.edit-img-apply { background:#6366f1; color:#fff; border:none; font-size:11px; font-weight:700; padding:6px 12px; border-radius:5px; cursor:pointer; white-space:nowrap; }
+
+/* MOBILE */
+@media (max-width: 900px) {
+  .sidebar { display:none; }
+  .main { margin-left:0; }
+  .hero { padding:48px 24px 40px; }
+  .hero h1 { font-size:1.85rem; }
+  .section { padding:48px 24px; }
+  .cat-divider { padding:0 24px; }
+  .flow { flex-direction:column; }
+  .flow-step { border-right:none; border-bottom:1px solid var(--line); }
+  .flow-step:last-child { border-bottom:none; }
+  .flow-arr { display:none; }
+  .site-footer { padding: 36px 24px; }
+  .footer-inner { flex-direction: column; align-items: flex-start; }
+}
+</style>
+</head>
+<body>
+
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="name" id="sb-name">포트폴리오</div>
+    <div class="sub" id="sb-career"></div>
+  </div>
+  <div class="sidebar-nav" id="sidebar-nav"></div>
+  <div class="sidebar-foot">
+    <p id="sb-foot"></p>
+    <div class="sidebar-edit-row">
+      <a class="sidebar-edit" id="edit-gen-link" href="#">✎ 생성기에서 내용 수정하기</a>
+      <button class="sidebar-edit" id="btn-inline-edit" onclick="toggleEditMode()">✎ 현재페이지에서 내용 수정하기</button>
+    </div>
+  </div>
+</nav>
+
+<main class="main">
+  <div id="hero-wrap"></div>
+  <div id="content-wrap"></div>
+</main>
+
+<div class="edit-bar" id="edit-bar">
+  <span class="edit-bar-hint">텍스트를 클릭해 바로 수정하세요.</span>
+  <div style="display:flex;gap:8px">
+    <button class="btn-edit-cancel" onclick="cancelEdit()">취소</button>
+    <button class="btn-edit-save" onclick="saveEdits()">저장</button>
+  </div>
+</div>
+
+<script>
+// ── CATEGORY CONFIG ──
+const CAT = {
+  planning:    { label:'📋 기획',     dotColor:'#0891b2', pillCls:'cat-planning'  },
+  dev:         { label:'💻 개발',     dotColor:'#6366f1', pillCls:'cat-dev'       },
+  marketing:   { label:'📣 마케팅',   dotColor:'#d97706', pillCls:'cat-marketing' },
+  design:      { label:'🎨 디자인',   dotColor:'#ec4899', pillCls:'cat-design'    },
+  sales:       { label:'💼 영업·BD',  dotColor:'#059669', pillCls:'cat-sales'     },
+  operations:  { label:'⚙️ 운영',    dotColor:'#64748b', pillCls:'cat-ops'       },
+  education:   { label:'🎓 교육·강의',dotColor:'#7c3aed', pillCls:'cat-edu'      },
+  research:    { label:'🔬 연구·분석',dotColor:'#0284c7', pillCls:'cat-research'  },
+  content:     { label:'✍️ 콘텐츠',  dotColor:'#ea580c', pillCls:'cat-content'   },
+  etc:         { label:'📌 기타',     dotColor:'#475569', pillCls:'cat-etc'       },
+  // 구버전 호환
+  generate:    { label:'⚡ 생성',     dotColor:'#d4713a', pillCls:'cat-gen'       },
+  automate:    { label:'🔁 자동화',   dotColor:'#27a84e', pillCls:'cat-auto'      },
+  intelligize: { label:'🧠 지능화',   dotColor:'#3b82c9', pillCls:'cat-intel'     },
+  community:   { label:'🌐 커뮤니티', dotColor:'#0891b2', pillCls:'cat-comm'      },
+};
+
+// ── DECODE DATA ──
+function loadData() {
+  const hash = location.hash.slice(1);
+  if (!hash) return null;
+  try {
+    return JSON.parse(decodeURIComponent(escape(atob(hash))));
+  } catch(e) {
+    return null;
+  }
+}
+
+// ── RENDER ──
+function render(data) {
+  window._currentData = data;
+  document.title = `${data.name} — 포트폴리오`;
+  document.getElementById('page-title').textContent = `${data.name} — 포트폴리오`;
+
+  // Sidebar
+  document.getElementById('sb-name').textContent = data.name || '';
+  document.getElementById('sb-career').textContent = data.career || '';
+  document.getElementById('sb-foot').textContent = data.role || '';
+
+  // Edit link — back to generator with same hash
+  document.getElementById('edit-gen-link').href = 'generator.html' + location.hash;
+
+  // Hero
+  const heroWrap = document.getElementById('hero-wrap');
+  const statsHtml = (data.stats||[]).map((s, i) => `
+    <div class="stat">
+      <strong data-e="stats.${i}.num" contenteditable="false">${esc(s.num)}</strong>
+      <span data-e="stats.${i}.label" contenteditable="false">${esc(s.label)}</span>
+    </div>
+  `).join('');
+
+  // Career breadcrumb — | 구분자로 스타일 분리
+  const careerParts = (data.career||'').split('|').map(s=>s.trim()).filter(Boolean);
+  const careerBreadcrumb = careerParts.map((p,i) => {
+    const isLast = i === careerParts.length - 1;
+    const clr = i===0 ? 'rgba(255,255,255,.65)' : isLast ? '#a8d8a8' : 'rgba(255,255,255,.42)';
+    return (i>0?`<span style="margin:0 10px;color:rgba(255,255,255,.2)">|</span>`:'')+`<span style="color:${clr}">${esc(p)}</span>`;
+  }).join('');
+
+  heroWrap.innerHTML = `
+    <div class="hero">
+      <div class="eyebrow">Portfolio</div>
+      <p class="hero-name" data-e="name" contenteditable="false">${esc(data.name)}</p>
+      ${careerBreadcrumb ? `<div data-e="career" contenteditable="false" style="font-size:11.5px;color:rgba(255,255,255,.28);letter-spacing:.03em;display:flex;flex-wrap:wrap;align-items:center;margin-bottom:32px">${careerBreadcrumb}</div>` : '<div style="margin-bottom:32px"></div>'}
+      ${data.tagline ? `<h2 class="hero-tagline" data-e="tagline" contenteditable="false">${esc(data.tagline)}</h2>` : ''}
+      ${data.role ? `<div class="hero-role" data-e="role" contenteditable="false">${esc(data.role)}</div>` : ''}
+      ${data.intro ? `<p class="hero-sub" data-e="intro" contenteditable="false">${esc(data.intro)}</p>` : ''}
+      ${statsHtml ? `<div class="stats">${statsHtml}</div>` : ''}
+    </div>
+  `;
+
+  // Build sidebar nav & content
+  let navHtml = '';
+  let contentHtml = '';
+
+  // ── Career Journey (가로 카드) ──
+  if (data.experiences && data.experiences.length) {
+    navHtml += `<a href="#s-exp" class="nav-link"><span class="nav-num">—</span><span>Career Journey</span></a>`;
+    const n = data.experiences.length;
+    const cols = Array.from({length:n}, (_,i)=> i<n-1 ? '1fr auto' : '1fr').join(' ');
+    const cards = data.experiences.map((e,i) => {
+      const isCurrent = i === n-1;
+      return `
+        <div class="cj-card${isCurrent?' cj-current':''}">
+          <div class="cj-period" data-e="experiences.${i}.period" contenteditable="false">${esc(e.period||'')}</div>
+          <div class="cj-company" data-e="experiences.${i}.company" contenteditable="false">${esc(e.company||'')}</div>
+          <div class="cj-title" data-e="experiences.${i}.title" contenteditable="false">${esc(e.title||'')}</div>
+          ${e.desc?`<div class="cj-desc" data-e="experiences.${i}.desc" contenteditable="false">${esc(e.desc)}</div>`:''}
+        </div>
+        ${i<n-1?'<div class="cj-arrow">›</div>':''}`;
+    }).join('');
+    contentHtml += `
+      <div class="section" id="s-exp" style="padding:40px 80px">
+        <div class="section-num" style="margin-bottom:20px">Career Journey</div>
+        <div class="career-journey" style="grid-template-columns:${cols}">${cards}</div>
+      </div>`;
+  }
+
+  // ── 핵심 강점 섹션 ──
+  if (data.strengths && data.strengths.length) {
+    navHtml += `<a href="#s-strengths" class="nav-link"><span class="nav-num">—</span><span>핵심 강점</span></a>`;
+    const strengthCards = data.strengths.map((s, si) => {
+      const colonIdx = s.indexOf(':');
+      const title = colonIdx > -1 ? s.slice(0, colonIdx).trim() : s.trim();
+      const desc = colonIdx > -1 ? s.slice(colonIdx + 1).trim() : '';
+      return `<div class="stack-item" style="padding:16px 18px">
+        <div class="sn" style="font-size:13px;margin-bottom:${desc ? '6px' : '0'}" data-e="strengths.${si}.title" contenteditable="false">${esc(title)}</div>
+        ${desc ? `<div class="sr" data-e="strengths.${si}.desc" contenteditable="false">${esc(desc)}</div>` : ''}
+      </div>`;
+    }).join('');
+    contentHtml += `
+      <section class="section" id="s-strengths">
+        <div class="section-num">Key Strengths</div>
+        <h2 class="section-title">핵심 강점</h2>
+        <div class="stack-grid" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr))">${strengthCards}</div>
+      </section>`;
+  }
+
+  // ── 스킬 섹션 (stack-grid) ──
+  if (data.skills && data.skills.length) {
+    navHtml += `<a href="#s-skills" class="nav-link"><span class="nav-num">—</span><span>기술 스택</span></a>`;
+    contentHtml += `
+      <section class="section" id="s-skills">
+        <div class="section-num">SKILLS &amp; TOOLS</div>
+        <h2 class="section-title">기술 스택</h2>
+        <div class="stack-grid">
+          ${data.skills.map((s, si)=>{
+            const [name, desc] = s.split(':').map(x=>x.trim());
+            return `<div class="stack-item"><div class="sn" data-e="skills.${si}.name" contenteditable="false">${esc(name)}</div>${desc?`<div class="sr" data-e="skills.${si}.desc" contenteditable="false">${esc(desc)}</div>`:''}</div>`;
+          }).join('')}
+        </div>
+      </section>`;
+  }
+
+  // ── 학력 섹션 (spec table) ──
+  if (data.education && data.education.length) {
+    navHtml += `<a href="#s-edu" class="nav-link"><span class="nav-num">—</span><span>학력 · 자격증</span></a>`;
+    contentHtml += `
+      <section class="section" id="s-edu">
+        <div class="section-num">Credentials</div>
+        <h2 class="section-title">학력 · 자격증</h2>
+        <table class="spec" style="font-size:13px">
+          <thead><tr>
+            <td>학교 / 기관</td>
+            <td>전공 / 자격증명</td>
+            <td style="width:72px">연도</td>
+          </tr></thead>
+          ${data.education.map((e, ei)=>`
+            <tr>
+              <td style="font-weight:600;color:var(--ink)" data-e="education.${ei}.school" contenteditable="false">${esc(e.school||'')}</td>
+              <td data-e="education.${ei}.degree" contenteditable="false">${esc(e.degree||'')}</td>
+              <td><span class="badge-green" data-e="education.${ei}.year" contenteditable="false">${esc(e.year||'')}</span></td>
+            </tr>
+          `).join('')}
+        </table>
+      </section>`;
+  }
+
+  // ── 프로젝트 섹션 ──
+  const projects = data.projects || [];
+  if (projects.length) {
+    const grouped = {};
+    projects.forEach((p, pIdx) => {
+      const cat = p.category || 'etc';
+      if (!grouped[cat]) grouped[cat] = [];
+      grouped[cat].push([p, pIdx]);
+    });
+
+    let projDisplayNum = 0;
+    Object.keys(grouped).forEach(cat => {
+      const cfg = CAT[cat] || CAT.etc;
+      navHtml += `<div class="nav-cat"><span class="cat-pill ${cfg.pillCls}">${cfg.label}</span></div>`;
+      grouped[cat].forEach(([p]) => {
+        projDisplayNum++;
+        const dn = String(projDisplayNum).padStart(2,'0');
+        p._dn = dn;
+        navHtml += `<a href="#p-${dn}" class="nav-link"><span class="nav-num">${dn}</span><span>${esc(p.title)}</span></a>`;
+      });
+      contentHtml += `
+        <div class="cat-divider">
+          <div class="cat-divider-inner">
+            <div class="cat-label-big"><span class="dot" style="background:${cfg.dotColor}"></span>${cfg.label}</div>
+            <div class="cat-line"></div>
+          </div>
+        </div>`;
+
+      grouped[cat].forEach(([p, pIdx]) => {
+        const dn = p._dn;
+        const tagsHtml = (p.tags||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join('');
+
+        // abadges from impacts
+        const abHtml = (p.impacts||[]).length ? `
+          <div class="abadges">
+            ${p.impacts.map((ic,i)=>{
+              const cls = i===0?'ab-g':i===1?'ab-o':'ab-b';
+              return `<span class="ab ${cls}">${esc(ic.num)} ${esc(ic.label)}</span>`;
+            }).join('')}
+          </div>` : '';
+
+        // arch from flow (2개 이상일 때만 표시)
+        const archColors = ['a-in','a-ai','a-pro','a-out'];
+        const archHtml = (p.flow||[]).length >= 2 ? `
+          <div class="arch">
+            <div class="arch-t">Work Process</div>
+            <div class="arch-b">
+              ${p.flow.map((s,j)=>`
+                <div class="arch-row">
+                  <span class="an ${archColors[j%4]}" data-e="projects.${pIdx}.flow.${j}.tool" contenteditable="false">${esc(s.tool)}</span>
+                  <span class="aa">›</span>
+                  <span class="ad" data-e="projects.${pIdx}.flow.${j}.desc" contenteditable="false">${esc(s.desc)}</span>
+                </div>`).join('')}
+            </div>
+          </div>` : '';
+
+        // project image
+        let imgSrc = '';
+        if (p.image) {
+          imgSrc = p.image.startsWith('lsimg:') ? (localStorage.getItem(p.image) || '') : p.image;
+        }
+        const imgHtml = imgSrc ? `<img class="proj-img" src="${imgSrc}" alt="">` : '';
+        const imgUrlVal = (p.image && !p.image.startsWith('lsimg:')) ? p.image : '';
+
+        contentHtml += `
+          <section class="section" id="p-${dn}">
+            ${imgHtml}
+            <div class="edit-img-zone">
+              <input type="text" class="edit-img-url" id="img-url-${pIdx}" placeholder="이미지 URL (https://...)" value="${esc(imgUrlVal)}">
+              <label class="edit-img-file-lbl" for="img-file-${pIdx}">📁 파일</label>
+              <input type="file" id="img-file-${pIdx}" accept="image/*" style="display:none" onchange="uploadProjImg(${pIdx}, this)">
+              <button class="edit-img-apply" onclick="applyProjImgUrl(${pIdx})">적용</button>
+              ${p.image ? `<button class="edit-img-apply" style="background:#ef4444" onclick="clearProjImg(${pIdx})">삭제</button>` : ''}
+            </div>
+            <div class="section-num">PROJECT ${dn}</div>
+            <h2 class="section-title" data-e="projects.${pIdx}.title" contenteditable="false">${esc(p.title)}</h2>
+            ${(p.problem||p.solution||p.result)?`
+              <div class="psr-block">
+                ${p.problem?`<p class="psr-row"><strong class="psr-lbl psr-prob">문제</strong><span data-e="projects.${pIdx}.problem" contenteditable="false">${esc(p.problem)}</span></p>`:''}
+                ${p.solution?`<p class="psr-row"><strong class="psr-lbl psr-sol">해결</strong><span data-e="projects.${pIdx}.solution" contenteditable="false">${esc(p.solution)}</span></p>`:''}
+                ${p.result?`<p class="psr-row"><strong class="psr-lbl psr-res">성과</strong><span data-e="projects.${pIdx}.result" contenteditable="false">${esc(p.result)}</span></p>`:''}
+              </div>`:(p.desc?`<p class="section-desc" data-e="projects.${pIdx}.desc" contenteditable="false">${esc(p.desc)}</p>`:'')}
+            ${tagsHtml?`<div class="tags">${tagsHtml}</div>`:''}
+            ${abHtml}
+            ${archHtml}
+          </section>`;
+      });
+    });
+  }
+
+  if (!contentHtml) contentHtml = '<div class="empty-state">등록된 내용이 없습니다.</div>';
+
+  document.getElementById('sidebar-nav').innerHTML = navHtml;
+  document.getElementById('content-wrap').innerHTML = contentHtml;
+
+  // Scroll spy
+  const sections = document.querySelectorAll('.section');
+  const links = document.querySelectorAll('.nav-link');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const active = document.querySelector(`.nav-link[href="#${e.target.id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { threshold: 0.3 });
+  sections.forEach(s => observer.observe(s));
+
+  // Fade-in
+  const fadeObserver = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.05 });
+  sections.forEach(s => {
+    const rect = s.getBoundingClientRect();
+    if (rect.top < window.innerHeight) s.classList.add('visible');
+    else fadeObserver.observe(s);
+  });
+}
+
+function esc(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/\n/g,'<br>');
+}
+
+// ── EDIT MODE ──
+function enterEditMode() {
+  document.body.classList.add('edit-mode');
+  document.getElementById('edit-bar').classList.add('show');
+  document.getElementById('btn-inline-edit').classList.add('active');
+  document.querySelectorAll('[data-e]').forEach(el => { el.contentEditable = 'true'; });
+}
+function exitEditMode() {
+  document.body.classList.remove('edit-mode');
+  document.getElementById('edit-bar').classList.remove('show');
+  document.getElementById('btn-inline-edit').classList.remove('active');
+  document.querySelectorAll('[data-e]').forEach(el => { el.contentEditable = 'false'; });
+}
+function toggleEditMode() {
+  document.body.classList.contains('edit-mode') ? exitEditMode() : enterEditMode();
+}
+function cancelEdit() {
+  exitEditMode();
+  render(window._currentData);
+}
+
+function setDeep(obj, path, val) {
+  const keys = path.split('.');
+  let cur = obj;
+  for (let i = 0; i < keys.length - 1; i++) {
+    const k = /^\d+$/.test(keys[i]) ? Number(keys[i]) : keys[i];
+    if (cur[k] === undefined || cur[k] === null) cur[k] = /^\d+$/.test(keys[i+1]) ? [] : {};
+    cur = cur[k];
+  }
+  const last = /^\d+$/.test(keys[keys.length-1]) ? Number(keys[keys.length-1]) : keys[keys.length-1];
+  cur[last] = val;
+}
+
+function saveEdits() {
+  const data = JSON.parse(JSON.stringify(window._currentData));
+  const compoundMap = {}; // e.g. "strengths.0" → {title, desc} or "skills.0" → {name, desc}
+
+  document.querySelectorAll('[data-e]').forEach(el => {
+    const path = el.getAttribute('data-e');
+    const parts = path.split('.');
+    const rootArr = parts[0];
+
+    if ((rootArr === 'strengths' || rootArr === 'skills') && parts.length === 3) {
+      const baseKey = `${parts[0]}.${parts[1]}`;
+      if (!compoundMap[baseKey]) compoundMap[baseKey] = {};
+      compoundMap[baseKey][parts[2]] = el.innerText.trim();
+    } else {
+      setDeep(data, path, el.innerText.trim());
+    }
+  });
+
+  // Reconstruct compound strings
+  for (const [key, val] of Object.entries(compoundMap)) {
+    const combined = val.desc ? `${val.title || val.name || ''}: ${val.desc}` : (val.title || val.name || '');
+    setDeep(data, key, combined);
+  }
+
+  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+  history.replaceState(null, '', '#' + encoded);
+  exitEditMode();
+  render(data);
+}
+
+// ── PROJECT IMAGE ──
+function _reRenderWithData(data) {
+  const wasEditing = document.body.classList.contains('edit-mode');
+  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+  history.replaceState(null, '', '#' + encoded);
+  render(data);
+  if (wasEditing) enterEditMode();
+}
+function applyProjImgUrl(pIdx) {
+  const url = document.getElementById(`img-url-${pIdx}`).value.trim();
+  if (!url) return;
+  const data = JSON.parse(JSON.stringify(window._currentData));
+  data.projects[pIdx].image = url;
+  _reRenderWithData(data);
+}
+function uploadProjImg(pIdx, input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const key = `lsimg:proj_${pIdx}_${Date.now()}`;
+    localStorage.setItem(key, e.target.result);
+    const data = JSON.parse(JSON.stringify(window._currentData));
+    data.projects[pIdx].image = key;
+    _reRenderWithData(data);
+  };
+  reader.readAsDataURL(file);
+}
+function clearProjImg(pIdx) {
+  const data = JSON.parse(JSON.stringify(window._currentData));
+  if (data.projects[pIdx].image && data.projects[pIdx].image.startsWith('lsimg:')) {
+    localStorage.removeItem(data.projects[pIdx].image);
+  }
+  delete data.projects[pIdx].image;
+  _reRenderWithData(data);
+}
+
+// ── MAIN ──
+function init() {
+  const data = loadData();
+  if (data) {
+    render(data);
+  } else {
+    document.getElementById('hero-wrap').innerHTML = `
+    <div style="text-align:center;padding:100px 40px;background:#09090f;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px">
+      <div style="font-size:2rem">📄</div>
+      <div style="color:rgba(255,255,255,0.6);font-size:14px">포트폴리오 데이터가 없습니다.</div>
+      <a href="generator.html" style="color:#3b82f6;font-size:13px;text-decoration:none;border:1px solid rgba(59,130,246,0.4);padding:8px 18px;border-radius:6px;margin-top:4px">← 생성기로 돌아가기</a>
+    </div>
+  `;
+  }
+}
+window.addEventListener('hashchange', init);
+init();
+</script>
+</body>
+</html>
