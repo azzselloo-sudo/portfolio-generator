@@ -311,6 +311,7 @@ const CAT = {
 
 // ── DECODE DATA ──
 function loadData() {
+  if (window._INLINE_DATA) return window._INLINE_DATA;
   const hash = location.hash.slice(1);
   if (!hash) return null;
   try {
@@ -694,10 +695,29 @@ window.addEventListener('hashchange', init);
 init();
 
 async function deployPortfolio() {
-  await navigator.clipboard.writeText(window.location.href);
   const btn = document.getElementById('btn-portfolio-deploy');
-  btn.textContent = '✓ 복사됨';
-  setTimeout(() => { btn.textContent = '▲ 배포'; }, 2000);
+  btn.textContent = '배포 중...';
+  btn.disabled = true;
+  try {
+    const data = window._currentData;
+    if (!data) { alert('포트폴리오 데이터가 없습니다.'); return; }
+    const res = await fetch('/api/deploy', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data })
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || '배포 실패');
+    await navigator.clipboard.writeText(json.url);
+    btn.textContent = '✓ 복사됨';
+    alert('배포 완료!\n\n' + json.url + '\n\n링크가 클립보드에 복사됐어요.');
+  } catch(e) {
+    alert('오류: ' + e.message);
+    btn.textContent = '▲ 배포';
+  } finally {
+    btn.disabled = false;
+    setTimeout(() => { if(btn.textContent === '✓ 복사됨') btn.textContent = '▲ 배포'; }, 3000);
+  }
 }
 </script>
 </body>
